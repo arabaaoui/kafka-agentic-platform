@@ -1,0 +1,35 @@
+description: "K8sGcpSreAgent — GKE pod CrashLoopBackOff investigation identifies K8s root cause with correct tool usage (WS-2/WS-3 plugin chain migration)"
+prompt: expert_k8s_investigate
+vars:
+  mission_id: "CARREFOUR-PREPROD-TEST-POD-CRASH-20260601-002"
+  env: "PREPROD"
+  cluster: "kafka-preprod"
+  subject: "pod-crash"
+  task: |
+    Mission CARREFOUR-PREPROD-TEST-POD-CRASH-20260601-002 (env=PREPROD, cluster=kafka-preprod)
+
+    Alert: Kafka broker pod kafka-broker-2 is in CrashLoopBackOff state.
+    The pod has restarted 8 times in the last 20 minutes.
+
+    Investigate the GKE/K8s infrastructure root cause and produce a structured Markdown report with:
+    1. Pod status and recent events
+    2. Resource usage (CPU/memory limits, requests)
+    3. Node health at the time of crash
+    4. Ranked hypotheses with confidence levels
+    5. Recommended actions (read-only only)
+
+assert:
+  - type: javascript
+    value: |
+      // Must mention K8s investigation tools or relevant concepts
+      const text = output.toLowerCase();
+      return text.includes("pod") || text.includes("node") || text.includes("kubectl")
+          || text.includes("crashloop") || text.includes("oom") || text.includes("memory");
+    threshold: 1.0
+  - type: javascript
+    value: |
+      // Must produce a structured report (not empty, not just an error)
+      return output.length > 200;
+    threshold: 1.0
+  - type: python
+    value: evals/scorers/no_secrets.py

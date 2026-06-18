@@ -1,0 +1,90 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.uv/
+*.egg-info/
+dist/
+build/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Environment & secrets — NEVER commit
+.env
+.env.*
+!.env.example
+*.kubeconfig
+kubeconfig-*
+local_kubeconfig*.yaml
+*-sa.json
+*_sa.json
+*-key.json
+*_key.json
+vg1np-*.json
+*.pem
+*.key
+*.p12
+audit.jsonl
+
+# Mission runtime data — local only
+.platform/
+missions/
+
+# Langfuse / Postgres local
+postgres_data/
+redis_data/
+langfuse_data/
+
+# Node.js (web/)
+web/node_modules/
+web/.next/
+web/out/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Claude Code agent folder — may contain credentials
+# .claude/  — kept in git for speckit skills; add sub-paths if needed
+.claude/
+.gemini/
+.specify/
+
+# Agent Outputs
+agent-outputs/
+
+# Audits
+audits/
+
+# Sandbox / local debug scripts
+diagnostic_tools.py
+test_adc_container.py
+test_curl_tools.py
+test_dev_setup.py
+test_prom_httpx.py
+test_prom_httpx_sync.py
+test_prom_proxy.py
+test_proxy_issue.py
+test_requests.py
+test_requests_tls12.py
+
+# Obsidian vault notebook
+kafka-agentic-platform/
+
+# TS Build cache
+*.tsbuildinfo
+
+# Knowledge Base
+kb/
+
+# Local markdown files
+CLAUDE.md
+README_SSL_FIX.md

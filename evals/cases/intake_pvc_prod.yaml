@@ -1,0 +1,28 @@
+description: "IntakeAgent — Jira PVC saturation on PROD cluster"
+prompt: intake_classify
+vars:
+  payload: |
+    {
+      "source": "jira",
+      "external_id": "PKH-4421",
+      "title": "[INCIDENT] KafkaHub PROD - PVC saturation broker-2 (92%)",
+      "description": "Broker kafka-broker-2 PVC /var/lib/kafka/data is at 92% capacity. Risk of OOM and partition leader imbalance.",
+      "project": "PKH",
+      "assignee": "arabaaoui",
+      "status": "In Progress",
+      "priority": "High",
+      "labels": ["kafka", "storage", "prod"]
+    }
+assert:
+  - type: javascript
+    value: |
+      const r = JSON.parse(output);
+      return r.rejected === false
+        && r.env === "PROD"
+        && r.type === "INCIDENT"
+        && r.pattern === "pvc-saturation"
+        && typeof r.subject === "string"
+        && r.subject.length <= 30;
+    threshold: 1.0
+  - type: python
+    value: evals/scorers/no_secrets.py

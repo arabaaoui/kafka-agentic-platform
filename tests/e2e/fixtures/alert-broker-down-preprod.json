@@ -1,0 +1,39 @@
+{
+  "version": "4",
+  "groupKey": "{}:{alertname=\"KafkaBrokerDown\"}",
+  "truncatedAlerts": 0,
+  "status": "firing",
+  "receiver": "phenix-platform",
+  "groupLabels": {"alertname": "KafkaBrokerDown"},
+  "commonLabels": {
+    "alertname": "KafkaBrokerDown",
+    "cluster": "kafkahub-preprod",
+    "namespace": "kafka-preprod",
+    "severity": "critical",
+    "env": "preprod"
+  },
+  "commonAnnotations": {
+    "summary": "Kafka broker kafka-preprod-broker-1 is down",
+    "description": "Broker kafka-preprod-broker-1 has been unreachable for more than 5 minutes in cluster kafkahub-preprod"
+  },
+  "externalURL": "http://alertmanager.preprod:9093",
+  "alerts": [
+    {
+      "status": "firing",
+      "labels": {
+        "alertname": "KafkaBrokerDown",
+        "cluster": "kafkahub-preprod",
+        "instance": "kafka-preprod-broker-1",
+        "namespace": "kafka-preprod",
+        "severity": "critical",
+        "env": "preprod"
+      },
+      "annotations": {
+        "summary": "Kafka broker kafka-preprod-broker-1 is down"
+      },
+      "startsAt": "2026-05-10T10:00:00Z",
+      "endsAt": "0001-01-01T00:00:00Z",
+      "generatorURL": "http://prometheus.preprod:9090/graph?g0.expr=..."
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+description: "Consolidator — one agent failed (timeout), audit must include PARTIAL AUDIT marker"
+prompt: consolidator_audit
+vars:
+  reports: |
+    === kafka_strimzi_expert ===
+    Broker kafka-broker-0 restarted 3 times in last hour. Logs show:
+    "java.lang.OutOfMemoryError: Java heap space" before each restart.
+    JVM heap is set to 4Gi. Topic log.dirs usage: 287Gi / 310Gi.
+    Hypothesis: heap tuning required, possibly combined with log retention issue.
+
+    === k8s_gcp_sre ===
+    [AGENT FAILED: timeout after 30s — GKE API unreachable for cluster kafkahub-preprod]
+    Partial data only: pod restart count from Prometheus = 3 in last hour.
+
+    === prom_alerts_triage ===
+    Alert KafkaBrokerJVMGarbageCollectionTime is legitimate.
+    GC pause time: avg 4.2s over last 30min (threshold: 1s).
+    Consistent with OOM pressure. Alert rule is correct.
+assert:
+  - type: python
+    value: evals/scorers/ranked_hypotheses.py
+  - type: javascript
+    value: |
+      return output.toUpperCase().includes("PARTIAL");
+    threshold: 1.0
+  - type: python
+    value: evals/scorers/no_secrets.py

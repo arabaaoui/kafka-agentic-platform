@@ -1,0 +1,30 @@
+description: "IntakeAgent — alertmanager firing alert on PROD should create mission"
+prompt: intake_classify
+vars:
+  payload: |
+    {
+      "source": "alertmanager",
+      "external_id": "alert-pvc-prod-9a2b",
+      "alertname": "KafkaBrokerDiskUsageHigh",
+      "status": "firing",
+      "severity": "critical",
+      "cluster": "kafkahub-prod",
+      "namespace": "kafka",
+      "message": "Broker kafka-broker-1 disk usage is 95%. Risk of data loss.",
+      "labels": {
+        "alertname": "KafkaBrokerDiskUsageHigh",
+        "severity": "critical",
+        "cluster": "kafkahub-prod",
+        "pod": "kafka-broker-1"
+      }
+    }
+assert:
+  - type: javascript
+    value: |
+      const r = JSON.parse(output);
+      return r.rejected === false
+        && r.env === "PROD"
+        && r.type === "INCIDENT"
+        && r.pattern === "pvc-saturation"
+        && typeof r.cluster === "string";
+    threshold: 1.0

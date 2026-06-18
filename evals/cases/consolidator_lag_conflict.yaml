@@ -1,0 +1,29 @@
+description: "Consolidator — consumer lag, agents disagree on root cause → CONFLICT marker required"
+prompt: consolidator_audit
+vars:
+  reports: |
+    === kafka_strimzi_expert ===
+    Consumer group phenix-etl lag on topic phenix.orders.v3: 4.2M messages.
+    Partition assignment is uneven: 3 partitions on consumer-0, 1 on consumer-1.
+    Suspect: RangeAssignor imbalance with IdentityReplicationPolicy causing hot partition.
+    Recommendation: switch to CooperativeStickyAssignor.
+
+    === k8s_gcp_sre ===
+    Consumer pods show normal CPU/memory. No GKE node issues.
+    Network egress from Kafka cluster normal. No throttling.
+    Suspect: upstream producer spike — phenix.orders.v3 ingestion rate tripled
+    in last 2 hours (15k/s → 45k/s). Root cause is producer side, not consumer.
+
+    === prom_alerts_triage ===
+    Alert KafkaConsumerGroupLag on phenix-etl is legitimate (has topic filter).
+    Cannot determine root cause from metrics alone. Both hypotheses plausible.
+assert:
+  - type: python
+    value: evals/scorers/ranked_hypotheses.py
+  - type: javascript
+    value: |
+      // Must contain CONFLICT marker when agents disagree
+      return output.includes("⚠ CONFLICT") || output.includes("CONFLICT");
+    threshold: 1.0
+  - type: python
+    value: evals/scorers/no_secrets.py

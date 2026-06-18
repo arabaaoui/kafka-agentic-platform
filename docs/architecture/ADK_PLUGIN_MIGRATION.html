@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ADK Plugin Migration — kafka-agentic-platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <script>mermaid.initialize({ startOnLoad: true, theme: 'dark' });</script>
+    <style>
+        body { background-color: #020617; color: #e2e8f0; font-family: ui-sans-serif, system-ui, sans-serif; }
+        .mermaid { background-color: #0f172a; padding: 20px; border-radius: 1rem; border: 1px solid #1e293b; margin: 2rem 0; }
+        code { background-color: #1e293b; padding: 0.2rem 0.4rem; border-radius: 0.25rem; font-family: monospace; color: #38bdf8; }
+        pre { background-color: #0f172a; padding: 1rem; border-radius: 0.5rem; overflow-x: auto; border: 1px solid #1e293b; font-size: 13px; }
+        .map-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem; }
+        .box-custom { background-color: #1a0a00; border: 1px solid #f0883e; padding: 1rem; border-radius: 0.5rem; }
+        .box-native { background-color: #001a0a; border: 1px solid #3fb950; padding: 1rem; border-radius: 0.5rem; }
+        .step-card { border-left: 4px solid #3b82f6; background-color: #0f172a; padding: 1.5rem; margin-bottom: 1.5rem; border-radius: 0 0.5rem 0.5rem 0; }
+        .badge-done { background: #14532d; color: #4ade80; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; }
+        .badge-flag { background: #1e3a5f; color: #60a5fa; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; }
+        .badge-stretch { background: #3b1f5e; color: #c084fc; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 0.75rem 1rem; border: 1px solid #1e293b; text-align: left; font-size: 14px; }
+        th { background-color: #0f172a; color: #94a3b8; font-weight: 600; }
+        td code { font-size: 12px; }
+    </style>
+</head>
+<body class="max-w-6xl mx-auto p-8 leading-relaxed">
+
+<header class="mb-12 border-b border-slate-800 pb-8">
+    <div class="flex items-center gap-4 mb-4">
+        <a href="../pedagogy/index.html" class="text-slate-500 hover:text-slate-300 text-sm">← Référence Technique</a>
+        <span class="text-slate-700">/</span>
+        <span class="text-slate-400 text-sm">Architecture</span>
+    </div>
+    <h1 class="text-4xl font-black text-white mb-3 tracking-tight">ADK Plugin Migration</h1>
+    <p class="text-xl text-slate-400 mb-4">Mapping custom ↔ natif — Spec 010 ADK 2.x (kafka-agentic-platform)</p>
+    <div class="flex gap-3 flex-wrap">
+        <span class="badge-done">Spec 010</span>
+        <span class="badge-done">Migration finalisée — 2026-06-11</span>
+        <span class="badge-done">google-adk ≥ 2.0</span>
+    </div>
+</header>
+
+<!-- ── WHY ───────────────────────────────────────────────────────────────────── -->
+<section class="mb-16">
+    <h2 class="text-2xl font-bold text-blue-400 mb-6">1. Pourquoi cette migration</h2>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <div class="step-card">
+            <h3 class="font-bold text-orange-400 mb-3">Situation initiale (ADK 1.33)</h3>
+            <ul class="text-slate-300 space-y-2 text-sm">
+                <li>• <code>PluginChain</code> custom (~120 lignes) appelé manuellement dans <code>BaseAgent._wrap_tool()</code></li>
+                <li>• <code>_wrap_tool()</code> try/except → string <code>"ERROR: ..."</code> (pas de <code>on_tool_error_callback</code>)</li>
+                <li>• <code>asyncio.gather()</code> avec stagger artificiel 1s pour 3 experts en parallèle</li>
+                <li>• <code>OTelMetricsPlugin</code> stub no-op (observabilité absente)</li>
+                <li>• Monkey-patch <code>api/main.py:5-30</code> pour ajouter <code>auth_preprocessor</code> manquant</li>
+                <li>• <code>fn.__name__ = "..."</code> pour renommer les tools (pas de Tool Provenance)</li>
+            </ul>
+        </div>
+        <div class="step-card" style="border-left-color: #3fb950">
+            <h3 class="font-bold text-green-400 mb-3">Cible (ADK 2.x natif)</h3>
+            <ul class="text-slate-300 space-y-2 text-sm">
+                <li>• <code>BasePlugin.before_tool_callback()</code> / <code>after_tool_callback()</code> natifs</li>
+                <li>• Plugin enregistré sur <code>Runner(plugins=[...])</code></li>
+                <li>• <code>FunctionTool(fn)</code> avec name depuis <code>fn.__name__</code>, description depuis <code>fn.__doc__</code></li>
+                <li>• <code>AutoTracingPlugin</code> — OTel gen_ai.client.* en une ligne</li>
+                <li>• <code>MissionContext</code> via <code>session.state["_mission_context"]</code></li>
+                <li>• Suppression du monkey-patch (fixé upstream en ADK 1.34+)</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="bg-slate-900 border border-slate-700 rounded-lg p-4 text-sm text-slate-400">
+        <strong class="text-slate-200">Non-régression stricte :</strong> La migration n'est pas une réécriture fonctionnelle.
+        Chaque mission qui passait sur ADK 1.33 doit produire un résultat sémantiquement équivalent après migration.
+        Les tests golden dans <code>tests/golden/</code> et le script <code>check_regression.py</code> pilotent la validation.
+    </div>
+</section>
+
+<!-- ── GAP TABLE ─────────────────────────────────────────────────────────────── -->
+<section class="mb-16">
+    <h2 class="text-2xl font-bold text-blue-400 mb-6">2. Table de mapping custom ↔ natif</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Abstraction custom (avant)</th>
+                <th>Primitive ADK 2.x (après)</th>
+                <th>Statut</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code>PluginChain</code> + <code>_wrap_tool()</code> dans <code>BaseAgent</code></td>
+                <td><code>Runner(plugins=[BasePlugin, ...])</code> — callbacks appelés automatiquement</td>
+                <td><span class="badge-done">Natif</span></td>
+            </tr>
+            <tr>
+                <td><code>Plugin</code> ABC custom (<code>before</code>/<code>after</code>)</td>
+                <td><code>google.adk.plugins.BasePlugin</code> (<code>before_tool_callback</code> async)</td>
+                <td><span class="badge-done">Natif</span></td>
+            </tr>
+            <tr>
+                <td><code>fn.__name__ = "custom_name"</code> (tool rename)</td>
+                <td><code>FunctionTool(fn)</code> — name depuis <code>fn.__name__</code>, doc depuis <code>fn.__doc__</code></td>
+                <td><span class="badge-done">Natif</span></td>
+            </tr>
+            <tr>
+                <td><code>OTelMetricsPlugin</code> stub no-op</td>
+                <td><code>AutoTracingPlugin()</code> — gen_ai.client.* spans natifs ADK 2.2</td>
+                <td><span class="badge-done">Natif</span></td>
+            </tr>
+            <tr>
+                <td><code>asyncio.gather()</code> + stagger 1s (orchestrator)</td>
+                <td><code>asyncio.gather()</code> sans stagger (ParallelAgent ADK STRETCH WS-6)</td>
+                <td><span class="badge-done">Natif</span></td>
+            </tr>
+            <tr>
+                <td>Monkey-patch <code>auth_preprocessor</code> dans <code>api/main.py:5-30</code></td>
+                <td>Supprimé — fixé upstream ADK ≥ 1.34</td>
+                <td><span class="badge-done">Natif</span></td>
+            </tr>
+            <tr>
+                <td>MissionContext passé manuellement à chaque plugin</td>
+                <td><code>session.state["_mission_context"]</code> lu via <code>tool_context.state</code></td>
+                <td><span class="badge-done">Natif</span></td>
+            </tr>
+            <tr>
+                <td><code>RAGIndex._fetch_kb_context()</code> appel manuel avant chaque run</td>
+                <td><code>BaseMemoryService</code> adapter (PgVectorMemoryService)</td>
+                <td><span class="badge-stretch">Stretch WS-7</span></td>
+            </tr>
+            <tr>
+                <td><code>BaseAgent</code> Python pur (n'hérite pas d'ADK)</td>
+                <td><code>BaseAgent → BaseNode</code> (ADK 2.0 workflow primitive)</td>
+                <td><span class="badge-stretch">Stretch WS-6</span></td>
+            </tr>
+        </tbody>
+    </table>
+</section>
+
+<!-- ── PLUGIN ORDER ───────────────────────────────────────────────────────────── -->
+<section class="mb-16">
+    <h2 class="text-2xl font-bold text-blue-400 mb-6">3. Ordre canonique des plugins</h2>
+
+    <div class="mermaid">
+flowchart LR
+    A["1\nGuardrails"] --> B["2\nResilience"] --> C["3\nToolParamInjector"] --> D["4\nAudit"] --> E["5\nActivity"] --> F["6\nMissionIsolation"] --> G["7\nAutonomy"] --> H["8\nErrorHandler"] --> I["9\nAutoTracing\n(native only)"]
+    style A fill:#1c3a5e,stroke:#58a6ff,color:#e6edf3
+    style B fill:#1c3a5e,stroke:#58a6ff,color:#e6edf3
+    style C fill:#3a1f00,stroke:#f0883e,color:#e6edf3
+    style D fill:#3a2900,stroke:#d29922,color:#e6edf3
+    style E fill:#003a38,stroke:#2dd4bf,color:#e6edf3
+    style F fill:#3a0000,stroke:#f85149,color:#e6edf3
+    style G fill:#3a0010,stroke:#e06c75,color:#e6edf3
+    style H fill:#1a1a1a,stroke:#8b949e,color:#e6edf3
+    style I fill:#2a0a4a,stroke:#7c3aed,color:#e6edf3
+    </div>
+
+    <p class="text-slate-400 text-sm mt-4">
+        9 plugins dans l'ordre canonique défini par <code>build_plugin_list()</code> dans <code>core/plugins.py</code>.
+        Les plugins 1, 2, 5, 8 sont des stubs internes ADK (<code>_GuardrailsADKPlugin</code>, <code>_ResilienceADKPlugin</code>,
+        <code>_ActivityADKPlugin</code>, <code>_ErrorHandlerADKPlugin</code>) ; les plugins 3, 4, 6, 7, 9 ont une
+        logique applicative concrète.
+    </p>
+</section>
+
+<!-- ── CODE BEFORE/AFTER ─────────────────────────────────────────────────────── -->
+<section class="mb-16">
+    <h2 class="text-2xl font-bold text-blue-400 mb-6">4. Avant / après — code clé</h2>
+
+    <h3 class="text-lg font-semibold text-slate-200 mb-3">4.1 Déclaration d'un plugin</h3>
+    <div class="map-row">
+        <div class="box-custom">
+            <p class="text-orange-400 text-xs font-bold uppercase mb-2">Avant — Plugin ABC custom</p>
+            <pre><code class="text-slate-300">from core.plugin_base import Plugin
+
+class AutonomyPlugin(Plugin):
+    def before_tool_callback(
+        self,
+        tool_name: str,
+        tool_params: dict,
+        ctx: MissionContext,
+    ) -> None:
+        if tool_name in BLOCKED_TOOLS:
+            raise AutonomyViolation(tool_name)
+
+    def after_tool_callback(
+        self,
+        tool_name: str,
+        result: Any,
+        ctx: MissionContext,
+    ) -> Any:
+        return result</code></pre>
+        </div>
+        <div class="box-native">
+            <p class="text-green-400 text-xs font-bold uppercase mb-2">Après — ADK BasePlugin natif</p>
+            <pre><code class="text-slate-300">from google.adk.plugins import BasePlugin
+from google.adk.tools import BaseTool
+from google.adk.tools.tool_context import ToolContext
+from core.plugin_base import get_mission_context_from_state
+
+class AutonomyADKPlugin(BasePlugin):
+    def __init__(self) -> None:
+        super().__init__(name="autonomy")
+
+    async def before_tool_callback(
+        self,
+        *,
+        tool: BaseTool,
+        tool_args: dict,
+        tool_context: ToolContext,
+    ) -> None:
+        ctx = get_mission_context_from_state(
+            tool_context.state
+        )
+        if tool.name in BLOCKED_TOOLS:
+            raise AutonomyViolation(tool.name)</code></pre>
+        </div>
+    </div>
+
+    <h3 class="text-lg font-semibold text-slate-200 mb-3 mt-8">4.2 Enregistrement sur le Runner</h3>
+    <div class="map-row">
+        <div class="box-custom">
+            <p class="text-orange-400 text-xs font-bold uppercase mb-2">Avant — PluginChain wrappée dans les tools</p>
+            <pre><code class="text-slate-300"># BaseAgent._wrap_tools() retourne des closures
+# qui appellent chain.before() / after() autour de fn()
+wrapped = [
+    self._wrap_tool(fn, mission_ctx)
+    for fn in raw_tools
+]
+agent = LlmAgent(tools=wrapped, ...)
+runner = Runner(agent=agent, ...)</code></pre>
+        </div>
+        <div class="box-native">
+            <p class="text-green-400 text-xs font-bold uppercase mb-2">Après — plugins= sur le Runner</p>
+            <pre><code class="text-slate-300">from google.adk.tools import FunctionTool
+from core.plugin_base import _MISSION_CTX_KEY
+
+tools = [FunctionTool(fn) for fn in raw_tools]
+agent = LlmAgent(tools=tools, ...)
+
+plugins = build_plugin_list(
+    mission_context=mission_ctx,
+    tenant_config=self._tenant_config,
+)
+runner = Runner(agent=agent, plugins=plugins, ...)
+
+# MissionContext dans session.state pour les plugins
+await session_service.create_session(
+    ...,
+    state={_MISSION_CTX_KEY: mission_ctx},
+)</code></pre>
+        </div>
+    </div>
+
+    <h3 class="text-lg font-semibold text-slate-200 mb-3 mt-8">4.3 FunctionTool — name + description</h3>
+    <div class="map-row">
+        <div class="box-custom">
+            <p class="text-orange-400 text-xs font-bold uppercase mb-2">Avant — mutation directe __name__</p>
+            <pre><code class="text-slate-300">from kafka_agent_toolkit.tools.prom_query import query
+
+query.__name__ = "prom_query"
+# Pas de __doc__ → description vide pour ADK
+return [query]</code></pre>
+        </div>
+        <div class="box-native">
+            <p class="text-green-400 text-xs font-bold uppercase mb-2">Après — __name__ + __doc__ + FunctionTool</p>
+            <pre><code class="text-slate-300">from kafka_agent_toolkit.tools.prom_query import query
+
+query.__name__ = "prom_query"
+query.__doc__ = (
+    "Execute a PromQL query against the environment's "
+    "Prometheus instance. Returns the query result as JSON."
+)
+# Dans base.py (mode natif) :
+# tools = [FunctionTool(fn) for fn in raw_tools]
+return [query]</code></pre>
+        </div>
+    </div>
+</section>
+
+<!-- ── TRANSITION STRATEGY ────────────────────────────────────────────────────── -->
+<section class="mb-16">
+    <h2 class="text-2xl font-bold text-blue-400 mb-6">5. Migration finalisée</h2>
+
+    <div class="step-card">
+        <p class="text-slate-300 text-sm">
+            Les feature flags <code>ADK_USE_NATIVE_PLUGINS</code> et <code>ADK_USE_PARALLEL_AGENT</code> ont été introduits
+            comme filets de sécurité lors de la migration ADK 1.33 → 2.x (spec 010). Ils ont été retirés le
+            <strong>2026-06-11</strong> (Phase 8 cleanup) après validation complète.
+        </p>
+        <p class="text-slate-400 text-sm mt-3">
+            La plateforme tourne désormais <strong>exclusivement sur ADK 2.x natif</strong> :
+            <code>build_plugin_list()</code> retourne 9 <code>BasePlugin</code> enregistrés sur <code>Runner(plugins=[...])</code> ;
+            <code>asyncio.gather()</code> lance les 3 experts simultanément sans stagger artificiel.
+            Aucun code legacy (<code>PluginChain</code>, <code>_wrap_tool</code>, <code>default_plugin_chain</code>) ne subsiste.
+        </p>
+    </div>
+</section>
+
+<!-- ── WORKSTREAMS ────────────────────────────────────────────────────────────── -->
+<section class="mb-16">
+    <h2 class="text-2xl font-bold text-blue-400 mb-6">6. Workstreams — séquence et statut</h2>
+
+    <div class="space-y-4">
+        <div class="step-card">
+            <div class="flex items-center gap-3 mb-2">
+                <span class="badge-done">FAIT</span>
+                <h3 class="font-bold text-slate-200">WS-1 — Bump ADK ≥ 2.0 + suppression monkey-patch</h3>
+            </div>
+            <p class="text-slate-400 text-sm">
+                <code>pyproject.toml</code> : <code>google-adk&gt;=2.0,&lt;3</code>.
+                Suppression du bloc <code>api/main.py:5-30</code> (monkey-patch <code>auth_preprocessor</code>
+                inutile depuis ADK 1.34).
+            </p>
+        </div>
+        <div class="step-card">
+            <div class="flex items-center gap-3 mb-2">
+                <span class="badge-done">FAIT</span>
+                <h3 class="font-bold text-slate-200">WS-2 — PluginChain → ADK BasePlugin</h3>
+            </div>
+            <p class="text-slate-400 text-sm">
+                <code>build_plugin_list()</code> construit la liste de 9 <code>BasePlugin</code> pour le Runner.
+                Code legacy (<code>PluginChain</code>, <code>Plugin</code> ABC, <code>_wrap_tool</code>) supprimé en Phase 8.
+            </p>
+        </div>
+        <div class="step-card">
+            <div class="flex items-center gap-3 mb-2">
+                <span class="badge-done">FAIT</span>
+                <h3 class="font-bold text-slate-200">WS-3 — FunctionTool + __doc__ sur tous les tools</h3>
+            </div>
+            <p class="text-slate-400 text-sm">
+                <code>agents/kafka_strimzi_expert/agent.py</code>, <code>k8s_gcp_sre/agent.py</code>,
+                <code>prom_alerts_triage/agent.py</code> : <code>fn.__doc__</code> ajouté sur chaque tool.
+                <code>BaseAgent.run()</code> wrappe systématiquement en <code>FunctionTool(fn)</code>.
+            </p>
+        </div>
+        <div class="step-card">
+            <div class="flex items-center gap-3 mb-2">
+                <span class="badge-done">FAIT</span>
+                <h3 class="font-bold text-slate-200">WS-4 — AutoTracingPlugin (OTel natif ADK 2.2)</h3>
+            </div>
+            <p class="text-slate-400 text-sm">
+                <code>AutoTracingPlugin()</code> ajouté en position 9 dans <code>build_plugin_list()</code>.
+                Remplace le stub no-op <code>OTelMetricsPlugin</code> (supprimé avec le code legacy en Phase 8).
+                Émet <code>gen_ai.client.operation.duration</code>, <code>gen_ai.client.token.usage</code>.
+            </p>
+        </div>
+        <div class="step-card">
+            <div class="flex items-center gap-3 mb-2">
+                <span class="badge-done">FAIT</span>
+                <h3 class="font-bold text-slate-200">WS-5 — Fan-out sans stagger</h3>
+            </div>
+            <p class="text-slate-400 text-sm">
+                <code>orchestrator.py</code> : <code>asyncio.gather()</code> sans délai artificiel — 3 experts concurrent immédiat.
+                Le vrai <code>ParallelAgent</code> ADK reste en WS-6 (BaseAgent → BaseNode, STRETCH).
+                Flag <code>ADK_USE_PARALLEL_AGENT</code> supprimé en Phase 8.
+            </p>
+        </div>
+        <div class="step-card" style="border-left-color: #7c3aed; opacity:.8">
+            <div class="flex items-center gap-3 mb-2">
+                <span class="badge-stretch">STRETCH</span>
+                <h3 class="font-bold text-slate-200">WS-6 — BaseAgent → BaseNode (ADK 2.0 breaking)</h3>
+            </div>
+            <p class="text-slate-400 text-sm">
+                Hériter de <code>google.adk.agents.BaseAgent</code> (= BaseNode en 2.0). Réécrire <code>run()</code>
+                en générateur d'events. Activer le vrai <code>ParallelAgent</code>. Supprimer l'interpolation
+                <code>{VAR}</code> manuelle (regex fixée en 2.x). Dépend de WS-2..5 stables en LAB.
+            </p>
+        </div>
+        <div class="step-card" style="border-left-color: #7c3aed; opacity:.8">
+            <div class="flex items-center gap-3 mb-2">
+                <span class="badge-stretch">STRETCH</span>
+                <h3 class="font-bold text-slate-200">WS-7 — PgVectorMemoryService (BaseMemoryService)</h3>
+            </div>
+            <p class="text-slate-400 text-sm">
+                Wrapper <code>RAGIndex</code> (<code>core/mem0_bridge.py</code>) en <code>BaseMemoryService</code>.
+                Enregistrer sur le Runner. Supprimer <code>_fetch_kb_context()</code> manuel dans <code>BaseAgent</code>.
+                Dépend de WS-6. Ne pas migrer vers <code>VertexAiRagMemoryService</code> (source de vérité Postgres).
+            </p>
+        </div>
+    </div>
+</section>
+
+<!-- ── NON-GOALS ──────────────────────────────────────────────────────────────── -->
+<section class="mb-16">
+    <h2 class="text-2xl font-bold text-blue-400 mb-6">7. Non-goals explicites</h2>
+    <ul class="space-y-2 text-slate-300 text-sm">
+        <li>• <strong>NE PAS</strong> migrer le RAG pgvector vers <code>VertexAiRagMemoryService</code> — la donnée opérationnelle est dans Postgres avec les missions/tenants.</li>
+        <li>• <strong>NE PAS</strong> adopter Live API / token streaming — la plateforme est batch-investigation.</li>
+        <li>• <strong>NE PAS</strong> exposer les agents en serveurs MCP — la plateforme est consumer, pas publisher.</li>
+        <li>• <strong>NE PAS</strong> adopter A2A / Skill Registry / signed agent cards — single-process, single-author.</li>
+        <li>• <strong>NE PAS</strong> activer BigQuery Agent Analytics — Postgres + <code>audit.jsonl</code> couvrent le besoin.</li>
+        <li>• <strong>NE PAS</strong> toucher au bloc GKE token-patching de <code>orchestrator.py:158-193</code> — orthogonal à ADK.</li>
+        <li>• <strong>NE PAS</strong> modifier les prompts FR — la politique linguistique (ADR-005) ne doit pas dériver.</li>
+    </ul>
+</section>
+
+<!-- ── VALIDATION ─────────────────────────────────────────────────────────────── -->
+<section class="mb-16">
+    <h2 class="text-2xl font-bold text-blue-400 mb-6">8. Validation — golden captures</h2>
+    <p class="text-slate-300 mb-4 text-sm">
+        Capturer 2 missions golden en LAB et valider avec <code>python tests/golden/check_regression.py</code>.
+        Les feature flags ont été supprimés — la plateforme tourne exclusivement sur ADK 2.x natif :
+    </p>
+    <pre><code class="text-slate-300"># Structure attendue par mission :
+tests/golden/
+  alertmanager-lag-preprod/
+    prompts.json          # prompts envoyés au LLM
+    tool_calls.json       # liste des tool calls émis
+    audit.kafka_strimzi_expert.jsonl
+    audit.k8s_gcp_sre.jsonl
+    audit.prom_alerts_triage.jsonl
+    BRIEF.md              # post-mortem final
+    kb_card.json          # carte KB produite
+
+# Lancer la validation (diff structure + fields non-LLM) :
+python tests/golden/check_regression.py \
+    --compare alertmanager-lag-preprod /path/to/candidate/</code></pre>
+</section>
+
+<footer class="border-t border-slate-800 pt-8 text-slate-500 text-sm flex justify-between">
+    <span>kafka-agentic-platform — Spec 010 ADK 2.x Migration</span>
+    <span>Référence : <a href="../pedagogy/index.html#plugins" class="text-blue-500 hover:underline">docs/pedagogy/index.html#plugins</a></span>
+</footer>
+
+</body>
+</html>

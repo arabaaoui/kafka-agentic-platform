@@ -1,0 +1,30 @@
+description: "Consolidator — PVC saturation, all agents agree, clear ranked hypotheses"
+prompt: consolidator_audit
+vars:
+  reports: |
+    === kafka_strimzi_expert ===
+    PVC /var/lib/kafka/data on broker-2 is at 92% (285Gi / 310Gi).
+    Log compaction last ran 8 days ago. Retention policy is 7 days but compaction
+    is not running because `log.cleaner.enable=false` on this topic.
+    Hypothesis: log compaction misconfiguration preventing retention cleanup.
+
+    === k8s_gcp_sre ===
+    PersistentVolumeClaim kafka-data-kafka-broker-2 (standard-rwo, 310Gi) at 92%.
+    No GKE node pressure. No disk IOPS throttling observed in Cloud Monitoring.
+    Pod kafka-broker-2 memory: 6.2Gi / 8Gi. No OOM risk immediate.
+    Agrees with Strimzi expert: compaction is the root cause.
+
+    === prom_alerts_triage ===
+    Alert KafkaBrokerDiskUsageHigh is legitimate (topic filter `topic!=""` present in rule).
+    Not a false positive. VictoriaMetrics shows linear growth 85%→92% over 6 days.
+    Projected saturation in 2 days at current rate.
+assert:
+  - type: python
+    value: evals/scorers/ranked_hypotheses.py
+  - type: python
+    value: evals/scorers/no_secrets.py
+  - type: javascript
+    value: |
+      // Must contain executive summary and ranked table
+      return output.includes("##") && output.includes("|") && !output.includes("⚠ CONFLICT");
+    threshold: 1.0

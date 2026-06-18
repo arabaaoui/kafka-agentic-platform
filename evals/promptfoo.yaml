@@ -1,0 +1,104 @@
+# Promptfoo eval suite — kafka-agentic-platform v0
+# Run: promptfoo eval --config evals/promptfoo.yaml
+# CI gate: overall pass rate >= 80%
+
+description: "kafka-agentic-platform v0 — incident auto-triage eval suite"
+
+prompts:
+  - id: intake_classify
+    label: "IntakeAgent classification prompt"
+    raw: |
+      You are the intake agent for Kafka incident auto-triage.
+      Given the following trigger payload, extract:
+      - env (one of: PREPROD, PROD, REC, DEV, LAB)
+      - cluster (string)
+      - type (one of: INCIDENT, INVESTIGATION, MAINTENANCE, REVIEW)
+      - subject (alphanumeric+hyphen, max 30 chars, lowercase)
+      - pattern (one of: pvc-saturation, consumer-lag, prom-rule-false-positive,
+                         cert-expiry, broker-crash, rebalance-storm, network-partition,
+                         resource-exhaustion, auth-failure, unknown)
+      - rejected (bool — true if this should NOT trigger a mission)
+      - reject_reason (string, only if rejected)
+
+      Respond with a single JSON object only, no prose.
+
+      Trigger payload:
+      {{payload}}
+
+  - id: consolidator_audit
+    label: "EvidenceConsolidator audit generation"
+    raw: |
+      You are the evidence consolidator for Kafka incident triage.
+      Below are investigation reports from 3 expert agents.
+      Generate a ranked-hypotheses audit in Markdown with:
+      1. Executive summary (2-3 sentences)
+      2. Ranked hypotheses table (Rank | Hypothesis | Confidence | Evidence | Recommended action)
+      3. Conflicting signals section (if any)
+      4. Next steps
+
+      Use ⚠ CONFLICT marker if agents disagree on root cause.
+
+      Agent reports:
+      {{reports}}
+
+  - id: expert_kafka_investigate
+    label: "KafkaStrimziExpert investigation task"
+    raw: |
+      You are the Kafka/Strimzi expert agent for infrastructure incident investigation.
+      Your task: investigate the following incident and produce a structured Markdown report.
+      Apply the Plan-and-Solve method: state what you are verifying before each tool call.
+
+      {{task}}
+
+  - id: expert_k8s_investigate
+    label: "K8sGcpSreAgent investigation task"
+    raw: |
+      You are the GKE/K8s SRE expert agent for infrastructure incident investigation.
+      Your task: investigate the following incident and produce a structured Markdown report.
+      Apply the Plan-and-Solve method: state what you are verifying before each tool call.
+
+      {{task}}
+
+  - id: expert_prom_investigate
+    label: "PromAlertTriageAgent investigation task"
+    raw: |
+      You are the Prometheus alert triage expert agent.
+      Your task: triage the following alert and produce a structured Markdown report.
+      Apply the Plan-and-Solve method: state what you are verifying before each tool call.
+
+      {{task}}
+
+providers:
+  - id: google:gemini-1.5-flash
+    label: "Gemini 1.5 Flash"
+    config:
+      apiKey: "${GOOGLE_API_KEY}"
+      maxOutputTokens: 2048
+
+defaultTest:
+  options:
+    timeout: 30000
+
+tests:
+  - file: cases/intake_pvc_prod.yaml
+  - file: cases/intake_lag_preprod.yaml
+  - file: cases/intake_promrule_preprod.yaml
+  - file: cases/intake_cert_prod.yaml
+  - file: cases/intake_broker_crash_prod.yaml
+  - file: cases/intake_rebalance_storm_preprod.yaml
+  - file: cases/intake_jira_non_kafka.yaml
+  - file: cases/intake_resolved_ticket.yaml
+  - file: cases/intake_alertmanager_firing.yaml
+  - file: cases/intake_alertmanager_resolved.yaml
+  - file: cases/consolidator_pvc_consensus.yaml
+  - file: cases/consolidator_lag_conflict.yaml
+  - file: cases/consolidator_promrule_false_positive.yaml
+  - file: cases/consolidator_partial_agents.yaml
+  - file: cases/consolidator_no_secrets_in_output.yaml
+  # Expert agent plugin chain eval cases (010-adk-2x-migration WS-2/WS-3 — constitution IV)
+  - file: cases/expert_kafka_plugin_chain.yaml
+  - file: cases/expert_k8s_plugin_chain.yaml
+  - file: cases/expert_prom_plugin_chain.yaml
+
+scoring:
+  passThreshold: 0.8

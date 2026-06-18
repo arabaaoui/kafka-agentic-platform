@@ -1,0 +1,208 @@
+version: "3.9"
+
+services:
+
+  # ── Infrastructure (Postgres & Redis) ─────────────────────────────────────
+
+  postgres:
+    build:
+      context: .
+      dockerfile: Dockerfile.postgres
+    container_name: platform-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: platform
+      POSTGRES_PASSWORD: platform
+      POSTGRES_DB: platform
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U platform -d platform"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    container_name: platform-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # ── Phenix Autonomous Lab (K3s Lite) ──────────────────────────────────────
+  
+  phenix-k8s:
+    image: rancher/k3s:v1.31.0-k3s1
+    container_name: phenix-k8s-lab
+    profiles: ["lab"]
+    privileged: true
+    command: server --disable traefik --tls-san=phenix-k8s-lab --tls-san=backend
+    environment:
+      - K3S_KUBECONFIG_OUTPUT=/output/kubeconfig.yaml
+      - K3S_KUBECONFIG_MODE=666
+    ports:
+      - "6443:6443"    # Kubernetes API
+      - "30090:30090"  # Prometheus NodePort
+      - "30092:30092"  # Kafka external NodePort
+      - "30093:30093"  # Alertmanager NodePort
+    volumes:
+      - k3s_output:/output
+      - /home/arabaaoui/.gemini/ca-cert.pem:/usr/local/share/ca-certificates/carrefour.crt:ro
+      - ./registries.yaml:/etc/rancher/k3s/registries.yaml:ro
+    healthcheck:
+      test: ["CMD-SHELL", "[ -f /output/kubeconfig.yaml ]"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 20s
+
+  # ── Lab Provisioner ───────────────────────────────────────────────────────
+  
+  phenix-provisioner:
+    image: bitnami/kubectl:latest
+    container_name: phenix-lab-provisioner
+    profiles: ["lab"]
+    user: root
+    depends_on:
+      phenix-k8s:
+        condition: service_healthy
+    volumes:
+      - ./lab:/lab
+      - k3s_output:/output
+      - /home/arabaaoui/.gemini/ca-cert.pem:/usr/local/share/ca-certificates/carrefour.crt:ro
+    environment:
+      - KUBECONFIG=/output/kubeconfig.yaml
+    entrypoint: ["/bin/sh", "/lab/provisioner.sh"]
+
+  # ── Kafka UI ──────────────────────────────────────────────────────────────
+  
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: platform-kafka-ui
+    profiles: ["lab"]
+    ports:
+      - "8085:8080"
+    environment:
+      KAFKA_CLUSTERS_0_NAME: phenix-lab
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: phenix-k8s-lab:30092
+    depends_on:
+      - phenix-k8s
+
+  # ── Observability (Langfuse) ──────────────────────────────────────────────
+  langfuse:
+    image: langfuse/langfuse:2
+    container_name: platform-langfuse
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://platform:platform@postgres:5432/langfuse
+      NEXTAUTH_URL: http://localhost:3001
+      NEXTAUTH_SECRET: changeme-langfuse-secret
+      SALT: changeme-langfuse-salt
+    ports:
+      - "3001:3000"
+
+  # ── Backend ───────────────────────────────────────────────────────────────
+
+  backend:
+    build:
+      context: ../../
+      dockerfile: kafka-agentic-platform/deploy/Dockerfile.backend
+      target: dev
+    container_name: platform-backend
+    profiles: ["app"]
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    env_file:
+      - ../.env
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://platform:platform@postgres:5432/platform
+      - DATABASE_URL_SYNC=postgresql://platform:platform@postgres:5432/platform
+      - REDIS_URL=redis://redis:6379/0
+      - LANGFUSE_HOST=http://langfuse:3000
+      - TENANTS_DIR=/app/tenants
+      - KUBECONFIG=/app/kube_conf/kubeconfig.yaml
+      - AUDIT_DIR=/app/audits
+      - AGENT_OUTPUT_DIR=/app/agent-outputs
+      - KB_DIR=/app/kb
+      - GOOGLE_APPLICATION_CREDENTIALS=/root/.config/gcloud-host/application_default_credentials.json
+      - CLOUDSDK_CONFIG=/root/.config/gcloud-host
+      - MCP_C4_ATLASSIAN_URL=https://jira.mcp.carrefour.com/mcp
+      - JIRA_MCP_TOKEN=${JIRA_MCP_TOKEN}
+      - MCP_USERNAME=${MCP_USERNAME}
+      - PYTHONHTTPSVERIFY=0
+      - PYTHONPATH=/app/kafka-agentic-platform
+      - WORKER_CONCURRENCY=3
+      - TRANSFORMERS_OFFLINE=1
+      - HF_DATASETS_OFFLINE=1
+      - EMBEDDING_MODEL_PATH=/root/.cache/huggingface/hub/models--intfloat--multilingual-e5-small/snapshots/614241f622f53c4eeff9890bdc4f31cfecc418b3
+    ports:
+      - "8001:8000"
+    volumes:
+      - ..:/app/kafka-agentic-platform
+      - /app/kafka-agentic-platform/.venv
+      - ../tenants:/app/tenants:ro
+      - ../audits:/app/audits
+      - ../agent-outputs:/app/agent-outputs
+      - ../kb:/app/kb
+      - k3s_output:/app/kube_conf
+      - ~/.config/gcloud:/root/.config/gcloud-host:ro
+      - /home/arabaaoui/.gemini/ca-cert.pem:/usr/local/share/ca-certificates/carrefour.crt:ro
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 20
+      start_period: 600s
+
+  # ── Frontend ──────────────────────────────────────────────────────────────
+
+  frontend:
+    build:
+      context: ../../
+      dockerfile: kafka-agentic-platform/web/Dockerfile
+    container_name: platform-frontend
+    profiles: ["app"]
+    restart: unless-stopped
+    depends_on:
+      - backend
+    environment:
+      NEXT_TELEMETRY_DISABLED: 1
+      API_INTERNAL_URL: http://platform-backend:8000
+      NEXT_PUBLIC_LANGFUSE_HOST: http://localhost:3001
+      NEXT_PUBLIC_LANGFUSE_PROJECT_ID: proj-lab-platform
+    ports:
+      - "3000:3000"
+    volumes:
+      - ../web:/app
+      - /app/node_modules
+      - ../web/node_modules/@marcel/web-components/dist:/app/node_modules/@marcel/web-components/dist:ro
+      - ../web/node_modules/@marcel/web-tokens/dist:/app/node_modules/@marcel/web-tokens/dist:ro
+      - ../web/node_modules/recharts:/app/node_modules/recharts:ro
+      - ../web/node_modules/react-smooth:/app/node_modules/react-smooth:ro
+      - ../web/node_modules/recharts-scale:/app/node_modules/recharts-scale:ro
+      - ../web/node_modules/tiny-invariant:/app/node_modules/tiny-invariant:ro
+      - ../web/node_modules/victory-vendor:/app/node_modules/victory-vendor:ro
+      - ../web/node_modules/fast-equals:/app/node_modules/fast-equals:ro
+      - ../web/node_modules/react-transition-group:/app/node_modules/react-transition-group:ro
+      - ../web/node_modules/dom-helpers:/app/node_modules/dom-helpers:ro
+      - ../web/node_modules/decimal.js-light:/app/node_modules/decimal.js-light:ro
+      - ../web/node_modules/lodash:/app/node_modules/lodash:ro
+      - ../web/node_modules/eventemitter3:/app/node_modules/eventemitter3:ro
+
+volumes:
+  postgres_data:
+  k3s_output:
