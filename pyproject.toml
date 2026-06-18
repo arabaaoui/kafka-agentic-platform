@@ -58,10 +58,6 @@ dev = [
 name = "carrefour"
 url = "https://enterpriserepo.fr.carrefour.com/artifactory/api/pypi/phenix-pypi-releases-local/simple"
 
-[[tool.uv.index]]
-name = "carrefour"
-url = "https://enterpriserepo.fr.carrefour.com/artifactory/api/pypi/phenix-pypi-snapshots-local"
-
 [tool.uv.sources]
 kafka-agent-toolkit = { index = "carrefour" }
 

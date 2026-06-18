@@ -38,7 +38,13 @@ pytest:
     - uv sync --all-extras
     - uv run pytest tests/unit/ --junitxml=report.xml --cov=core --cov-report=term --cov-report=xml
 
-# Réserve le build d'image de production pour la branche main après merge
+# Surcharge du job de release pour ré-injecter les credentials Artifactory du pipeline
+python-semantic-release:
+  variables:
+    UV_INDEX_CARREFOUR_USERNAME: $AF_JFROG_USERNAME
+    UV_INDEX_CARREFOUR_PASSWORD: $AF_JFROG_PASSWORD
+
+# Réserve le build d'image de production et sa publication pour la branche main après merge
 docker-build:
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
@@ -52,4 +58,5 @@ docker-build:
           --cache=true                                          \
           --dockerfile "deploy/Dockerfile.backend"              \
           --context "$(pwd)"                                    \
-          --target "prod"
+          --target "prod" \
+          --destination "${DOCKER_IMAGE}"
