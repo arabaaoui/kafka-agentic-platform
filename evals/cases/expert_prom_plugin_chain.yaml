@@ -1,0 +1,37 @@
+description: "PromAlertTriageAgent — Prometheus alert triage distinguishes false positive from real incident (WS-2/WS-3 plugin chain migration)"
+prompt: expert_prom_investigate
+vars:
+  mission_id: "CARREFOUR-PREPROD-TEST-PROM-ALERT-20260601-003"
+  env: "PREPROD"
+  cluster: "kafka-preprod"
+  subject: "prom-rule-false-positive"
+  task: |
+    Mission CARREFOUR-PREPROD-TEST-PROM-ALERT-20260601-003 (env=PREPROD, cluster=kafka-preprod)
+
+    Alert: KafkaBrokerUnderReplicatedPartitions fired at 14:32 UTC.
+    Current value: 3 under-replicated partitions on broker kafka-preprod-broker-1.
+    Alert threshold: >0 for 5 minutes.
+
+    Triage this alert: determine if it is a real incident or a false positive, and produce
+    a structured Markdown report with:
+    1. Current metric values from Prometheus
+    2. Historical trend (last 30 minutes)
+    3. Verdict: REAL INCIDENT or FALSE POSITIVE with confidence level
+    4. If real: probable cause and urgency
+    5. If false positive: why the rule fired incorrectly
+
+assert:
+  - type: javascript
+    value: |
+      // Must mention Prometheus investigation or relevant metric concepts
+      const text = output.toLowerCase();
+      return text.includes("promql") || text.includes("metric") || text.includes("under-replicated")
+          || text.includes("alert") || text.includes("triage") || text.includes("partition");
+    threshold: 1.0
+  - type: javascript
+    value: |
+      // Must produce a structured report (not empty, not just an error)
+      return output.length > 200;
+    threshold: 1.0
+  - type: python
+    value: evals/scorers/no_secrets.py

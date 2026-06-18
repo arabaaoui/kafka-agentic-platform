@@ -1,0 +1,30 @@
+description: "IntakeAgent — rebalance storm on PREPROD (RangeAssignor + IdentityReplicationPolicy)"
+prompt: intake_classify
+vars:
+  payload: |
+    {
+      "source": "alertmanager",
+      "external_id": "alert-rebalance-44f1",
+      "alertname": "KafkaConsumerGroupRebalancing",
+      "status": "firing",
+      "severity": "warning",
+      "cluster": "kafkahub-preprod",
+      "namespace": "kafka",
+      "message": "Consumer group phenix-stream-processor has been rebalancing for 8 minutes. Possible RangeAssignor issue with IdentityReplicationPolicy.",
+      "labels": {
+        "alertname": "KafkaConsumerGroupRebalancing",
+        "severity": "warning",
+        "cluster": "kafkahub-preprod",
+        "consumergroup": "phenix-stream-processor"
+      }
+    }
+assert:
+  - type: javascript
+    value: |
+      const r = JSON.parse(output);
+      return r.rejected === false
+        && r.env === "PREPROD"
+        && ["rebalance-storm", "consumer-lag"].includes(r.pattern)
+        && typeof r.subject === "string"
+        && r.subject.length <= 30;
+    threshold: 1.0

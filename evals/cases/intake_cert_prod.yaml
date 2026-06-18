@@ -1,0 +1,33 @@
+description: "IntakeAgent — TLS certificate expiry alert on PROD"
+prompt: intake_classify
+vars:
+  payload: |
+    {
+      "source": "alertmanager",
+      "external_id": "alert-cert-b7d2",
+      "alertname": "KafkaBrokerCertExpiringSoon",
+      "status": "firing",
+      "severity": "critical",
+      "cluster": "kafkahub-prod",
+      "namespace": "kafka",
+      "message": "TLS certificate for kafkahub-prod-kafka-tls expires in 7 days",
+      "labels": {
+        "alertname": "KafkaBrokerCertExpiringSoon",
+        "severity": "critical",
+        "cluster": "kafkahub-prod",
+        "secret": "kafkahub-prod-kafka-tls"
+      }
+    }
+assert:
+  - type: javascript
+    value: |
+      const r = JSON.parse(output);
+      return r.rejected === false
+        && r.env === "PROD"
+        && r.type === "INCIDENT"
+        && r.pattern === "cert-expiry"
+        && typeof r.subject === "string"
+        && r.subject.length <= 30;
+    threshold: 1.0
+  - type: python
+    value: evals/scorers/no_secrets.py

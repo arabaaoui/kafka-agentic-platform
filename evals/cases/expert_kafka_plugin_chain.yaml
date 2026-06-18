@@ -1,0 +1,33 @@
+description: "KafkaStrimziExpert — consumer lag investigation identifies root cause with correct tool usage (WS-2/WS-3 plugin chain migration)"
+prompt: expert_kafka_investigate
+vars:
+  mission_id: "CARREFOUR-PREPROD-TEST-CONSUMER-LAG-20260601-001"
+  env: "PREPROD"
+  cluster: "kafka-preprod"
+  subject: "consumer-lag"
+  task: |
+    Mission CARREFOUR-PREPROD-TEST-CONSUMER-LAG-20260601-001 (env=PREPROD, cluster=kafka-preprod)
+
+    Alert: KafkaConsumerGroupLag — consumer group phenix-etl shows 2.5M message lag
+    on topic phenix.orders.v3 (partition 0) for the past 15 minutes.
+
+    Investigate the root cause and produce a structured Markdown report with:
+    1. Hypotheses ranked by confidence
+    2. Tool calls performed and their results
+    3. Recommended actions (read-only only)
+
+assert:
+  - type: javascript
+    value: |
+      // Must mention at least one relevant Kafka investigation tool or concept
+      const text = output.toLowerCase();
+      return text.includes("lag") || text.includes("consumer") || text.includes("partition")
+          || text.includes("offset") || text.includes("group");
+    threshold: 1.0
+  - type: javascript
+    value: |
+      // Must produce a structured report (not empty, not just an error)
+      return output.length > 200;
+    threshold: 1.0
+  - type: python
+    value: evals/scorers/no_secrets.py

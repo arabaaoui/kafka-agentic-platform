@@ -1,0 +1,95 @@
+FROM python:3.11-slim AS base
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    git \
+    build-essential \
+    libpq-dev \
+    ca-certificates \
+    jq \
+    gnupg \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install kubectl (downgraded to 1.23 for --short flag compatibility)
+RUN curl -LO "https://dl.k8s.io/release/v1.23.17/bin/linux/amd64/kubectl" \
+    && chmod +x kubectl \
+    && mv kubectl /usr/local/bin/
+
+# Install Helm
+RUN curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 \
+    && chmod 700 get_helm.sh \
+    && ./get_helm.sh \
+    && rm get_helm.sh
+
+# Install Google Cloud SDK and GKE Auth Plugin
+RUN echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | tee -a /etc/apt/sources.list.d/google-cloud-sdk.list \
+    && curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | gpg --dearmor -o /usr/share/keyrings/cloud.google.gpg \
+    && apt-get update && apt-get install -y google-cloud-sdk google-cloud-sdk-gke-gcloud-auth-plugin \
+    && rm -rf /var/lib/apt/lists/*
+
+# ── Setup CA Certificates for Carrefour Proxy (Early build step) ──────────────
+COPY ca-cert.pem /usr/local/share/ca-certificates/carrefour.crt
+RUN update-ca-certificates
+ENV SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt
+ENV REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
+ENV CURL_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
+ENV UV_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
+
+WORKDIR /app
+
+# Install uv
+RUN pip install uv
+
+# ─── Target 1: Production (Target: prod) ─────────────────────
+FROM base AS prod
+
+# Copy only the application files (nolocal copy of toolkit!)
+COPY kafka-agentic-platform/pyproject.toml kafka-agentic-platform/uv.lock ./kafka-agentic-platform/
+
+WORKDIR /app/kafka-agentic-platform
+
+# Sync dependencies (this will download kafka-agent-toolkit from Artifactory/PyPI!)
+ENV UV_SYSTEM_CERTS=1
+RUN uv sync --no-cache
+
+# Pre-download embedding model for RAG (avoids runtime network dependency)
+RUN HF_HUB_DISABLE_SSL=1 \
+    uv run python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('intfloat/multilingual-e5-small')"
+
+# Copy project files
+COPY kafka-agentic-platform/ .
+
+# Copy entrypoint script
+COPY kafka-agentic-platform/deploy/entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+EXPOSE 8000
+ENTRYPOINT ["/entrypoint.sh"]
+
+# ─── Target 2: Local Development (Target: dev) ──────────────
+FROM base AS dev
+
+# Copy both application files and local toolkit directory
+COPY kafka-agentic-platform/pyproject.toml kafka-agentic-platform/uv.lock ./kafka-agentic-platform/
+COPY kafka-agent-toolkit ./kafka-agent-toolkit
+
+WORKDIR /app/kafka-agentic-platform
+
+# Sync dependencies with local toolkit
+ENV UV_SYSTEM_CERTS=1
+RUN uv sync --no-cache
+
+# Pre-download embedding model for RAG (avoids runtime network dependency)
+RUN HF_HUB_DISABLE_SSL=1 \
+    uv run python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('intfloat/multilingual-e5-small')"
+
+# Copy project files
+COPY kafka-agentic-platform/ .
+
+# Copy entrypoint script
+COPY kafka-agentic-platform/deploy/entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+EXPOSE 8000
+ENTRYPOINT ["/entrypoint.sh"]

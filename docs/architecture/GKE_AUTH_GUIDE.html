@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guide d'Authentification GKE — Phenix Kafka Ops</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <script>mermaid.initialize({ startOnLoad: true, theme: 'dark' });</script>
+    <style>
+        body { background-color: #020617; color: #e2e8f0; font-family: ui-sans-serif, system-ui, sans-serif; }
+        .mermaid { background-color: #0f172a; padding: 20px; border-radius: 1rem; border: 1px solid #1e293b; margin: 2rem 0; }
+        code { background-color: #1e293b; padding: 0.2rem 0.4rem; border-radius: 0.25rem; font-family: monospace; color: #38bdf8; }
+        pre { background-color: #0f172a; padding: 1rem; border-radius: 0.5rem; overflow-x: auto; border: 1px solid #1e293b; }
+        .step-card { border-left: 4px solid #3b82f6; background-color: #0f172a; padding: 1.5rem; margin-bottom: 1.5rem; border-radius: 0 0.5rem 0.5rem 0; }
+    </style>
+</head>
+<body class="max-w-5xl mx-auto p-8 leading-relaxed">
+
+    <header class="mb-12 border-b border-slate-800 pb-8 text-center">
+        <h1 class="text-4xl font-black text-white mb-4 tracking-tight">Guide d'Authentification GKE & GCP</h1>
+        <p class="text-xl text-slate-400">Comprendre le passage des clés JSON au mode "Zero-Key" (Workload Identity & Impersonation)</p>
+    </header>
+
+    <section class="mb-16">
+        <h2 class="text-2xl font-bold text-blue-400 mb-6 flex items-center gap-2">
+            <span>1.</span> Les Concepts Fondamentaux
+        </h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div class="bg-slate-900/50 p-6 rounded-2xl border border-slate-800">
+                <h3 class="text-lg font-bold text-white mb-3 flex items-center gap-2">
+                    🛡️ KSA (Kubernetes Service Account)
+                </h3>
+                <p class="text-slate-400 text-sm">
+                    C'est un <strong>badge local</strong> à un cluster spécifique. Il permet d'ouvrir les portes à l'intérieur du cluster (Pods, ConfigMaps, Secrets). Il est géré par les <strong>RBAC</strong> Kubernetes.
+                </p>
+            </div>
+            <div class="bg-slate-900/50 p-6 rounded-2xl border border-slate-800">
+                <h3 class="text-lg font-bold text-white mb-3 flex items-center gap-2">
+                    🌍 GSA (Google Service Account)
+                </h3>
+                <p class="text-slate-400 text-sm">
+                    C'est une <strong>identité globale</strong> (email) reconnue par tout Google Cloud. Elle permet d'accéder aux APIs GCP (Vertex AI, Cloud Storage, GKE API). Elle est gérée par l'<strong>IAM</strong> Google.
+                </p>
+            </div>
+        </div>
+
+        <div class="mermaid">
+            graph LR
+                Pod[Pod Applicatif] -- utilise --> KSA(KSA Badge local)
+                KSA -- mappé vers --> GSA(GSA Identité GCP)
+                GSA -- accès --> GCP[Services Google: AI, Storage, GKE]
+                
+                style Pod fill:#1e293b,stroke:#3b82f6
+                style KSA fill:#1e293b,stroke:#38bdf8
+                style GSA fill:#1e293b,stroke:#10b981
+                style GCP fill:#0f172a,stroke:#64748b
+        </div>
+    </section>
+
+    <section class="mb-16">
+        <h2 class="text-2xl font-bold text-blue-400 mb-6 flex items-center gap-2">
+            <span>2.</span> Scénario A : Workload Identity (Cas "Orrery")
+        </h2>
+        <p class="mb-4">
+            C'est le mode utilisé par une application qui ne travaille que dans <strong>son propre projet</strong>. Le lien est direct entre son badge interne (KSA) et son identité Google (GSA).
+        </p>
+        
+        <div class="mermaid">
+            sequenceDiagram
+                autonumber
+                participant Pod as Pod (Orrery)
+                participant MS as Metadata Server (GKE)
+                participant IAM as Google IAM
+                
+                Note over Pod, IAM: Initialisation au démarrage (Mapping via Annotation)
+                Pod->>MS: "Bonjour, je suis KSA 'orrery'. Donne-moi un token pour GSA 'orrery-bot'."
+                MS->>IAM: Vérifie la confiance (Workload Identity User)
+                IAM-->>MS: Token temporaire (JWT - 1h)
+                MS-->>Pod: Voici ton identité temporaire
+                Pod->>IAM: Utilise le token pour appeler Vertex AI
+        </div>
+        
+        <div class="bg-blue-900/10 border border-blue-900/30 p-4 rounded-xl text-sm italic text-blue-300">
+            <strong>Note technique :</strong> Dans ce cas, le GSA est lié au KSA. C'est l'identité native de l'application.
+        </div>
+    </section>
+
+    <section class="mb-16">
+        <h2 class="text-2xl font-bold text-blue-400 mb-6 flex items-center gap-2">
+            <span>3.</span> Scénario B : Impersonation (Notre Plateforme)
+        </h2>
+        <p class="mb-4 text-slate-300">
+            Notre plateforme est un <strong>Orchestrateur</strong>. Elle tourne dans un projet "Lab" mais doit agir dans des projets distants (Dev, Prod). On utilise l'impersonnalisation (usurpation d'identité sécurisée).
+        </p>
+
+        <div class="mermaid">
+            graph TD
+                subgraph Projet_LAB [Projet LAB - Central]
+                    P_Pod[Pod Backend]
+                    P_GSA[GSA Maître: plateforme]
+                end
+
+                subgraph Projet_PROD [Projet PROD - Cible]
+                    E_GSA[GSA Env: expert-prod]
+                    GKE[Cluster GKE Prod]
+                    RBAC[ClusterRole: Read-Only]
+                end
+
+                P_Pod -- identité native --> P_GSA
+                P_GSA -- "1. Demande token pour" --> E_GSA
+                E_GSA -- "2. Confiance IAM (Token Creator)" --> P_GSA
+                P_GSA -- "3. Reçoit Token Prod" --> P_Pod
+                P_Pod -- "4. Kubectl avec Token Prod" --> GKE
+                GKE -- "5. Vérifie RBAC lié à" --> E_GSA
+
+                style P_Pod fill:#1e293b,stroke:#3b82f6
+                style P_GSA fill:#1e293b,stroke:#3b82f6
+                style E_GSA fill:#1e293b,stroke:#10b981
+                style GKE fill:#0f172a,stroke:#f59e0b
+        </div>
+
+        <div class="step-card">
+            <h4 class="font-bold text-white mb-2 underline">Configuration IAM requise</h4>
+            <ol class="list-decimal list-inside space-y-2 text-sm text-slate-300">
+                <li><strong>GSA Maître</strong> : Créé dans le projet Lab (<code>kafka-agentic-platform@phenix-lab...</code>).</li>
+                <li><strong>GSA d'Environnement</strong> : Créé dans chaque projet cible (ex: <code>phenix-dev-reader@phenix-dev...</code>).</li>
+                <li><strong>Relation de Confiance</strong> : Dans le projet cible, accorder au GSA Maître le rôle <code>roles/iam.serviceAccountTokenCreator</code> sur le GSA d'Environnement.</li>
+            </ol>
+            <pre class="mt-4 text-xs"><code># Commande d'administration (GCP)
+gcloud iam service-accounts add-iam-policy-binding \
+    GSA_ENV@PROJECT_CIBLE.iam.gserviceaccount.com \
+    --member="serviceAccount:GSA_MAITRE@PROJET_LAB.iam.gserviceaccount.com" \
+    --role="roles/iam.serviceAccountTokenCreator"</code></pre>
+        </div>
+    </section>
+
+    <section class="mb-16">
+        <h2 class="text-2xl font-bold text-blue-400 mb-6 flex items-center gap-2">
+            <span>4.</span> Droits RBAC (ClusterRole)
+        </h2>
+        <p class="mb-4">
+            Le <code>ClusterRole</code> specifie ce que le compte a le droit de faire <strong>à l'intérieur</strong> de Kubernetes. On le lie à l'email du GSA pour que GKE fasse le lien.
+        </p>
+        <pre><code># Exemple de ClusterRoleBinding en Prod
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: phenix-platform-read-binding
+subjects:
+- kind: User
+  name: expert-prod@carrefour-prod.iam.gserviceaccount.com  # <-- L'email du GSA Env
+roleRef:
+  kind: ClusterRole
+  name: view # Rôle lecture seule
+  apiGroup: rbac.authorization.k8s.io</code></pre>
+    </section>
+
+    <section class="mb-16">
+        <h2 class="text-2xl font-bold text-blue-400 mb-6 flex items-center gap-2">
+            <span>5.</span> Résumé de l'Isolation Mission/Env
+        </h2>
+        <div class="bg-slate-900 border border-slate-800 p-8 rounded-2xl">
+            <ul class="space-y-6">
+                <li class="flex gap-4">
+                    <div class="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center font-bold text-white shrink-0">1</div>
+                    <div>
+                        <p class="font-bold text-white">L'Environnement (Menu Infra)</p>
+                        <p class="text-slate-400 text-sm">On y stocke l'email du GSA cible et le Kubeconfig configuré pour l'usurpation.</p>
+                    </div>
+                </li>
+                <li class="flex gap-4">
+                    <div class="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center font-bold text-white shrink-0">2</div>
+                    <div>
+                        <p class="font-bold text-white">La Mission (Orchestrateur)</p>
+                        <p class="text-slate-400 text-sm">Le worker verrouille les agents sur l'environnement de la mission. Impossible d'appeler l'IP de la Prod dans une mission de Dev.</p>
+                    </div>
+                </li>
+                <li class="flex gap-4">
+                    <div class="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center font-bold text-white shrink-0">3</div>
+                    <div>
+                        <p class="font-bold text-white">L'Exécution (BaseAgent & Orchestrateur)</p>
+                        <p class="text-slate-400 text-sm">Le backend génère un token "juste-à-temps" via l'identité source (ou impersonation), l'injecte dans un Kubeconfig éphémère dédié à la mission, supprimant ainsi la dépendance aux plugins d'authentification interactifs (<code>gke-gcloud-auth-plugin</code>).</p>
+                    </div>
+                </li>
+            </ul>
+        </div>
+    </section>
+
+    <section class="mb-16">
+        <h2 class="text-2xl font-bold text-blue-400 mb-6 flex items-center gap-2">
+            <span>6.</span> Le Patching Dynamique (Just-in-Time Token)
+        </h2>
+        <p class="mb-4 text-slate-300">
+            Pour garantir une connectivité fiable dans un environnement conteneurisé (Docker/GKE) sans intervention humaine, la plateforme utilise une technique de <strong>"Token Injection"</strong>.
+        </p>
+
+        <div class="bg-slate-900 border-l-4 border-amber-500 p-6 rounded-r-2xl mb-8">
+            <h4 class="text-amber-400 font-bold mb-2">Pourquoi ce mécanisme ?</h4>
+            <p class="text-sm text-slate-300">
+                Par défaut, un Kubeconfig GKE utilise un plugin <code>exec</code> qui appelle <code>gcloud</code>. Dans un conteneur, cela échoue souvent à cause des permissions sur les dossiers de cache ou de l'absence de session active. Le patching remplace cette méthode par un <strong>Bearer Token</strong> statique à courte durée de vie.
+            </p>
+        </div>
+
+        <div class="mermaid">
+            graph TD
+                Start[Déclenchement Mission] --> GetID[Récupération Identité Source]
+                GetID --> Impersonate{Impersonnalisation ?}
+                Impersonate -- Oui --> TargetToken[GSA Env Token]
+                Impersonate -- Non --> BaseToken[GSA Platform Token]
+                TargetToken --> Patch[Injection dans Kubeconfig]
+                BaseToken --> Patch
+                Patch --> Execute[kubectl / Expert Agent]
+                
+                style Patch fill:#1e3a8a,stroke:#3b82f6
+                style Execute fill:#064e3b,stroke:#10b981
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <h4 class="text-sm font-bold text-slate-400 mb-2">Kubeconfig Original (Template)</h4>
+                <pre class="text-[10px] opacity-60"><code>users:
+- name: gke-user
+  user:
+    exec:
+      command: gke-gcloud-auth-plugin
+      args: ["--cluster", "dev"]</code></pre>
+            </div>
+            <div>
+                <h4 class="text-sm font-bold text-blue-400 mb-2">Kubeconfig Patché (Éphémère)</h4>
+                <pre class="text-[10px] border border-blue-500/30"><code>users:
+- name: gke-user
+  user:
+    token: "ya29.A0ARWdV7..." # Injecté dynamiquement
+    # Plugin exec supprimé</code></pre>
+            </div>
+        </div>
+    </section>
+
+    <section class="mb-16">
+        <h2 class="text-2xl font-bold text-blue-400 mb-6 flex items-center gap-2">
+            <span>7.</span> Architecture de l'Orchestrateur Centralisé
+        </h2>
+        <p class="mb-4 text-slate-300">
+            L'Orchestrateur centralise le contrôle sans nécessiter le déploiement du backend dans chaque environnement cible. La connexion repose sur l'<strong>Identité</strong> (IAM) et non sur le <strong>Réseau</strong> (VPC).
+        </p>
+
+        <div class="mermaid">
+            graph TD
+                subgraph "Cluster LAB (Point de Contrôle)"
+                    B[Backend Pod]
+                    GI[GSA Plateforme]
+                end
+
+                subgraph "Cloud Google (IAM)"
+                    Trust{Relation de Confiance}
+                end
+
+                subgraph "Cluster PROD (Distant)"
+                    KP[Kube-API Prod]
+                    GP[GSA Expert Prod]
+                end
+
+                subgraph "Cluster DEV (Distant)"
+                    KD[Kube-API Dev]
+                    GD[GSA Expert Dev]
+                end
+
+                B -- identité native --> GI
+                GI -- "Usurpe" --> Trust
+                Trust -- "Génère Token" --> GP
+                Trust -- "Génère Token" --> GD
+                B -- "Token Prod" --> KP
+                B -- "Token Dev" --> KD
+
+                style B fill:#1e293b,stroke:#3b82f6
+                style GI fill:#1e293b,stroke:#3b82f6
+                style Trust fill:#0f172a,stroke:#64748b,stroke-dasharray: 5 5
+                style KP fill:#0f172a,stroke:#ef4444
+                style KD fill:#0f172a,stroke:#10b981
+        </div>
+
+        <div class="bg-emerald-900/10 border border-emerald-900/30 p-6 rounded-2xl">
+            <h4 class="text-emerald-400 font-bold mb-2">Avantages majeurs :</h4>
+            <ul class="list-disc list-inside text-sm text-slate-300 space-y-1">
+                <li><strong>Zéro VPC Peering</strong> : Pas besoin de lier les réseaux entre les projets GCP.</li>
+                <li><strong>Maintenance Réduite</strong> : Un seul backend à mettre à jour pour toute l'entreprise.</li>
+                <li><strong>Audit Unifié</strong> : Tous les accès sont tracés depuis l'identité centrale de la plateforme.</li>
+            </ul>
+        </div>
+    </section>
+
+    <section class="mb-16">
+        <h2 class="text-2xl font-bold text-blue-400 mb-6 flex items-center gap-2">
+            <span>8.</span> Développement Local & Tests
+        </h2>
+        <p class="mb-4">
+            En local, votre <strong>identité personnelle</strong> (compte @carrefour.com) remplace le GSA Maître.
+        </p>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="bg-slate-900/80 p-5 rounded-xl border border-slate-700">
+                <h4 class="font-bold text-white mb-2 italic underline text-sm">Étape 1 : Authentification</h4>
+                <p class="text-xs text-slate-400">
+                    Générez vos credentials ADC sur votre machine hôte :<br>
+                    <code class="block mt-2 text-blue-300">gcloud auth application-default login</code>
+                </p>
+            </div>
+            <div class="bg-slate-900/80 p-5 rounded-xl border border-slate-700">
+                <h4 class="font-bold text-white mb-2 italic underline text-sm">Étape 2 : Montage Docker</h4>
+                <p class="text-xs text-slate-400">
+                    Le fichier <code>docker-compose.yml</code> doit monter le dossier config de gcloud :
+                </p>
+                <pre class="mt-2 text-[10px]"><code>volumes:
+  - ~/.config/gcloud:/root/.config/gcloud-host:ro
+environment:
+  - GOOGLE_APPLICATION_CREDENTIALS=/root/.config/gcloud-host/application_default_credentials.json</code></pre>
+            </div>
+        </div>
+        <div class="mt-6 bg-amber-900/10 border border-amber-900/30 p-4 rounded-xl text-sm text-amber-300">
+            <strong>Attention :</strong> Votre compte personnel doit également avoir le droit <code>TokenCreator</code> sur les GSAs d'environnement pour que les tests fonctionnent depuis votre PC.
+        </div>
+    </section>
+
+    <footer class="text-center text-slate-500 text-xs border-t border-slate-800 pt-8 mt-12">
+        Documentation générée par Phenix Kafka Ops AI Ecosystem — 2026
+    </footer>
+
+</body>
+</html>

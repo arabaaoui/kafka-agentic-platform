@@ -1,0 +1,26 @@
+description: "IntakeAgent — broker crash / OOM killed on PROD"
+prompt: intake_classify
+vars:
+  payload: |
+    {
+      "source": "jira",
+      "external_id": "PKH-4398",
+      "title": "[INCIDENT] KafkaHub PROD - Broker kafka-broker-0 OOMKilled, partitions offline",
+      "description": "Pod kafka-broker-0 was OOMKilled. 47 partitions are currently offline. ISR shrink detected on topics: phenix.catalog.v2, phenix.prices.v1.",
+      "project": "PKH",
+      "assignee": "arabaaoui",
+      "status": "Open",
+      "priority": "Critical",
+      "labels": ["kafka", "broker", "oom", "prod"]
+    }
+assert:
+  - type: javascript
+    value: |
+      const r = JSON.parse(output);
+      return r.rejected === false
+        && r.env === "PROD"
+        && r.type === "INCIDENT"
+        && ["broker-crash", "resource-exhaustion"].includes(r.pattern)
+        && typeof r.subject === "string"
+        && r.subject.length <= 30;
+    threshold: 1.0

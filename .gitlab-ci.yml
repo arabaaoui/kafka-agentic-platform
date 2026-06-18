@@ -1,0 +1,42 @@
+include:
+  - project: "agilefabric/france/phenix/ci-gitlab/python-ci"
+    ref: v1.4.2
+    file: "ci/python/python.gitlab-ci.yml"
+
+variables:
+  APP: kafka-agentic-platform
+  APP_KIND: "ai-agents"
+  KUBERNETES_CPU_REQUEST: "1"
+  KUBERNETES_CPU_LIMIT: "2"
+  KUBERNETES_MEMORY_REQUEST: "4Gi"
+  KUBERNETES_MEMORY_LIMIT: "4Gi"
+  AUTOMATIC_VERSIONING: "true"
+
+check-lockfile:
+  rules:
+    - when: never
+
+lint-format:
+  before_script: []
+  script:
+    - pip install ruff==0.4.0
+    - ruff check .
+  rules:
+    - if: $CI_COMMIT_BRANCH != $CI_DEFAULT_BRANCH
+
+pytest:
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+docker-build:
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+  script:
+    - |
+        DOCKER_TAG=$(grep -m 1 "^version = " pyproject.toml | tr -d '"' | tr -d "'" | cut -d "=" -f 2 | xargs)
+        DOCKER_IMAGE="${DOCKER_REGISTRY}/phenix/${APP_KIND}/${DOCKER_IMAGE_NAME}:${DOCKER_TAG}"
+        /kaniko/executor \
+          --cache=true                                          \
+          --dockerfile "deploy/Dockerfile.backend"              \
+          --context "$(pwd)"                                    \
+          --target "prod"

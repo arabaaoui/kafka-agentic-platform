@@ -1,0 +1,23 @@
+description: "IntakeAgent — already resolved Jira ticket should be rejected"
+prompt: intake_classify
+vars:
+  payload: |
+    {
+      "source": "jira",
+      "external_id": "PKH-4380",
+      "title": "[INCIDENT] KafkaHub PROD - PVC alert (resolved)",
+      "description": "Broker PVC was at 88% last week. Issue resolved by compaction run.",
+      "project": "PKH",
+      "assignee": "arabaaoui",
+      "status": "Closed",
+      "resolution": "Done",
+      "priority": "Medium",
+      "labels": ["kafka", "storage", "prod"]
+    }
+assert:
+  - type: javascript
+    value: |
+      const r = JSON.parse(output);
+      return r.rejected === true
+        && typeof r.reject_reason === "string";
+    threshold: 1.0

@@ -1,0 +1,34 @@
+# Tenant configuration — PHENIX LAB (Self-Contained)
+# Purely for Lab Stack exploration.
+
+tenant: carrefour
+display_name: "Phenix Lab — Kafka Platform"
+
+# Default autonomy level (L2 = read-only for now)
+autonomy_level: L2
+
+jira_projects: [LAB]
+
+envs:
+  lab:
+    display_name: "LAB — LOCAL"
+    badge_color: "blue"
+    clusters: [phenix-lab]
+    kubeconfig: "/app/kube_conf/kubeconfig.yaml"
+    kafka_namespace: kafka
+    prom_url: "http://phenix-k8s-lab:30090"
+    vm_url: "http://phenix-k8s-lab:30090"
+
+  dev:
+    display_name: "GKE — DEV"
+    badge_color: "green"
+    clusters: [gke-vg1np-pf-phenix-devag-d1-dev-eurw1-kafka-hub]
+    kubeconfig: "" # Will be patched dynamically
+    kube_context: "gke-vg1np-pf-phenix-devag-d1-dev-eurw1-kafka-hub"
+    kafka_namespace: "kafka-dev"
+    target_gsa_email: "vg1np-pf-phenix-devag-d1@appspot.gserviceaccount.com"
+    prom_url: "https://prometheus-dev.internalapis.caas.phenix-dev.carrefour.com"
+    alertmanager_url: "https://alertmanager-dev.internalapis.caas.phenix-dev.carrefour.com"
+    proxy_url: "http://proxy.phenix-dev.carrefour.com:4239"
+    proxy_user: "abdelhak_rabaaoui"
+    proxy_pass: "Salamati09*"

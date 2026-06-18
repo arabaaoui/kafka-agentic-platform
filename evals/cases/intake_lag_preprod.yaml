@@ -1,0 +1,26 @@
+description: "IntakeAgent — Jira consumer group lag on PREPROD"
+prompt: intake_classify
+vars:
+  payload: |
+    {
+      "source": "jira",
+      "external_id": "PHX-887",
+      "title": "[INCIDENT] KafkaHub PREPROD - Consumer lag exploding on group phenix-etl",
+      "description": "Consumer group phenix-etl has accumulated 4.2M messages of lag on topic phenix.orders.v3. Rebalance triggered 3 times in last hour.",
+      "project": "PHX",
+      "assignee": "arabaaoui",
+      "status": "Open",
+      "priority": "High",
+      "labels": ["kafka", "consumer-lag", "preprod"]
+    }
+assert:
+  - type: javascript
+    value: |
+      const r = JSON.parse(output);
+      return r.rejected === false
+        && r.env === "PREPROD"
+        && r.type === "INCIDENT"
+        && r.pattern === "consumer-lag"
+        && typeof r.subject === "string"
+        && r.subject.length <= 30;
+    threshold: 1.0

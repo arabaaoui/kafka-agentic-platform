@@ -1,0 +1,26 @@
+description: "IntakeAgent — alertmanager resolved alert should be rejected (not firing)"
+prompt: intake_classify
+vars:
+  payload: |
+    {
+      "source": "alertmanager",
+      "external_id": "alert-pvc-prod-9a2b",
+      "alertname": "KafkaBrokerDiskUsageHigh",
+      "status": "resolved",
+      "severity": "critical",
+      "cluster": "kafkahub-prod",
+      "namespace": "kafka",
+      "message": "RESOLVED: Broker kafka-broker-1 disk usage is back to 72%.",
+      "labels": {
+        "alertname": "KafkaBrokerDiskUsageHigh",
+        "severity": "critical",
+        "cluster": "kafkahub-prod"
+      }
+    }
+assert:
+  - type: javascript
+    value: |
+      const r = JSON.parse(output);
+      return r.rejected === true
+        && typeof r.reject_reason === "string";
+    threshold: 1.0

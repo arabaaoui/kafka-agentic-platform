@@ -1,0 +1,47 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "GET /healthz — enriched response (011)",
+  "description": "Adds worker_count, queue_depth, oldest_pending_age_seconds to existing /healthz response",
+  "type": "object",
+  "required": ["status", "tenants"],
+  "properties": {
+    "status": {
+      "type": "string",
+      "enum": ["ok"]
+    },
+    "tenants": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "worker_count": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Number of active mission worker coroutines"
+    },
+    "queue_depth": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Number of triggers matched=true with processed_at IS NULL (pending + in-flight)"
+    },
+    "oldest_pending_age_seconds": {
+      "type": ["number", "null"],
+      "description": "Age in seconds of the oldest unprocessed trigger. null if queue is empty."
+    }
+  },
+  "examples": [
+    {
+      "status": "ok",
+      "tenants": ["carrefour"],
+      "worker_count": 3,
+      "queue_depth": 2,
+      "oldest_pending_age_seconds": 47.3
+    },
+    {
+      "status": "ok",
+      "tenants": ["carrefour"],
+      "worker_count": 1,
+      "queue_depth": 0,
+      "oldest_pending_age_seconds": null
+    }
+  ]
+}

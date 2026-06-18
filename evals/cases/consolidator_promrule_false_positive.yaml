@@ -1,0 +1,31 @@
+description: "Consolidator — PromRule false positive identified, audit must recommend rule fix"
+prompt: consolidator_audit
+vars:
+  reports: |
+    === kafka_strimzi_expert ===
+    No actual consumer lag detected on production consumer groups.
+    Cluster health is GREEN. All brokers operational. ISR at 100%.
+
+    === k8s_gcp_sre ===
+    No Kubernetes issues. All pods Running. No resource pressure.
+    Alert fired from PrometheusRule KafkaConsumerGroupLag.
+
+    === prom_alerts_triage ===
+    CRITICAL FINDING: PrometheusRule KafkaConsumerGroupLag in namespace kafka is missing
+    the `topic!=""` filter. The rule fires on internal __consumer_offsets topic metadata,
+    which always has high lag by design. This is a false positive.
+    Rule fix required: add `topic!=""` to the `expr` field.
+    Example fix:
+      sum(kafka_consumergroup_lag{topic!=""}) by (consumergroup) > 1000
+assert:
+  - type: python
+    value: evals/scorers/ranked_hypotheses.py
+  - type: javascript
+    value: |
+      // Must identify the PromRule fix as top recommendation
+      const lower = output.toLowerCase();
+      return (lower.includes('topic!=""') || lower.includes("topic filter") || lower.includes("false positive"))
+        && lower.includes("prometheu");
+    threshold: 1.0
+  - type: python
+    value: evals/scorers/no_secrets.py
