@@ -27,6 +27,9 @@ lint-format:
 pytest:
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+  script:
+    - uv sync --all-extras
+    - uv run pytest --junitxml=report.xml --cov=src --cov-report=term --cov-report=xml
 
 docker-build:
   rules:
