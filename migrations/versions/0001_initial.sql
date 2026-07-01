@@ -34,7 +34,7 @@ CREATE TABLE IF NOT EXISTS triggers (
 
 CREATE TABLE IF NOT EXISTS missions (
     id            UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
-    mission_id    TEXT        NOT NULL UNIQUE,        -- CARREFOUR-PREPROD-INCIDENT-…
+    mission_id    TEXT        NOT NULL UNIQUE,        -- ENTERPRISE-PREPROD-INCIDENT-…
     tenant        TEXT        NOT NULL,
     env           TEXT        NOT NULL,
     cluster       TEXT        NOT NULL DEFAULT '',
@@ -108,16 +108,16 @@ CREATE INDEX IF NOT EXISTS idx_filter_rules_tenant    ON filter_rules (tenant, s
 CREATE INDEX IF NOT EXISTS idx_audits_mission         ON audits (mission_id);
 CREATE INDEX IF NOT EXISTS idx_agent_outputs_mission  ON agent_outputs (mission_id);
 
--- ── Bootstrap: default Jira filter rule for tenant "carrefour" (spec 002 US1) ─
+-- ── Bootstrap: default Jira filter rule for tenant "enterprise" (spec 002 US1) ─
 
 INSERT INTO filter_rules (tenant, scope, name, enabled, priority, criteria, created_by)
 VALUES (
-    'carrefour',
+    'enterprise',
     'jira',
     'Mes incidents Kafka (bootstrap)',
     TRUE,
     100,
-    '{"jql": "project IN (PKH, PHX) AND assignee = arabaaoui AND issuetype IN (''Incident'', ''Bug'') AND status NOT IN (''Closed'', ''Resolved'') AND created >= -7d"}'::jsonb,
+    '{"jql": "project IN (KAP) AND assignee = ops-user AND issuetype IN (''Incident'', ''Bug'') AND status NOT IN (''Closed'', ''Resolved'') AND created >= -7d"}'::jsonb,
     'system'
 )
 ON CONFLICT DO NOTHING;

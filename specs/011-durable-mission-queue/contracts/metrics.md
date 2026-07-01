@@ -54,9 +54,9 @@ kafkaops_queue_claims_total{worker_id="worker-12345-1"} 41.0
 ```
 # HELP kafkaops_mission_completed_total Missions completed by outcome
 # TYPE kafkaops_mission_completed_total counter
-kafkaops_mission_completed_total{tenant="carrefour",env="prod",outcome="success"} 38.0
-kafkaops_mission_completed_total{tenant="carrefour",env="prod",outcome="failed"} 3.0
-kafkaops_mission_completed_total{tenant="carrefour",env="prod",outcome="ignored"} 1.0
+kafkaops_mission_completed_total{tenant="enterprise",env="prod",outcome="success"} 38.0
+kafkaops_mission_completed_total{tenant="enterprise",env="prod",outcome="failed"} 3.0
+kafkaops_mission_completed_total{tenant="enterprise",env="prod",outcome="ignored"} 1.0
 ```
 
 - **Labels**: `tenant`, `env`, `outcome` (`success` | `failed` | `ignored`)
@@ -112,8 +112,8 @@ kafkaops_queue_claims_total{worker_id="worker-42-1"} 7.0
 kafkaops_queue_claims_total{worker_id="worker-42-2"} 6.0
 # HELP kafkaops_mission_completed_total Missions completed by outcome
 # TYPE kafkaops_mission_completed_total counter
-kafkaops_mission_completed_total{tenant="carrefour",env="prod",outcome="success"} 18.0
-kafkaops_mission_completed_total{tenant="carrefour",env="prod",outcome="failed"} 2.0
+kafkaops_mission_completed_total{tenant="enterprise",env="prod",outcome="success"} 18.0
+kafkaops_mission_completed_total{tenant="enterprise",env="prod",outcome="failed"} 2.0
 # HELP kafkaops_mission_duration_seconds End-to-end pipeline duration
 # TYPE kafkaops_mission_duration_seconds histogram
 kafkaops_mission_duration_seconds_bucket{le="60.0"} 4.0

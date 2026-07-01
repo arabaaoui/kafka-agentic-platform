@@ -56,7 +56,7 @@ async def _process_alertmanager_payload(payload: dict[str, Any]) -> None:
         conn = await session.connection()
         handler = AlertmanagerWebhookHandler(
             db_conn=conn,
-            tenant="carrefour",
+            tenant="enterprise",
         )
         result = await handler.handle(payload)
         await session.commit()
@@ -81,7 +81,7 @@ class AlertmanagerWebhookHandler:
         *,
         db_conn: Any,
         engine: FilterEngine | None = None,
-        tenant: str = "carrefour",
+        tenant: str = "enterprise",
     ) -> None:
         self._db = db_conn
         self._engine = engine or FilterEngine()

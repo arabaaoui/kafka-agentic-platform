@@ -28,25 +28,25 @@ A mission for a preprod incident is created with `env=preprod`. The `MissionIsol
 
 ### User Story 2 — MISSION_ID Format and Traceability (Priority: P1)
 
-Every mission has a unique ID in the format `{TENANT}-{ENV}-{TYPE}-{SUBJECT}-{YYYYMMDD}-{SEQ:03d}` (e.g., `CARREFOUR-PREPROD-INCIDENT-PVC-SATURATION-20260510-001`). The ID is used in all audit logs, file paths, and Jira comments for full traceability.
+Every mission has a unique ID in the format `{TENANT}-{ENV}-{TYPE}-{SUBJECT}-{YYYYMMDD}-{SEQ:03d}` (e.g., `ENTERPRISE-PREPROD-INCIDENT-PVC-SATURATION-20260510-001`). The ID is used in all audit logs, file paths, and Jira comments for full traceability.
 
 **Acceptance Scenarios**:
 
-1. **Given** a mission creation request with `tenant=carrefour`, `env=preprod`, `type=incident`, `subject=pvc-saturation`, `date=2026-05-10`, **When** this is the first mission of the day with this pattern, **Then** the assigned ID is `CARREFOUR-PREPROD-INCIDENT-PVC-SATURATION-20260510-001`.
-2. **Given** a second mission with identical parameters on the same day, **When** created, **Then** its ID is `CARREFOUR-PREPROD-INCIDENT-PVC-SATURATION-20260510-002` (sequential counter).
+1. **Given** a mission creation request with `tenant=enterprise`, `env=preprod`, `type=incident`, `subject=pvc-saturation`, `date=2026-05-10`, **When** this is the first mission of the day with this pattern, **Then** the assigned ID is `ENTERPRISE-PREPROD-INCIDENT-PVC-SATURATION-20260510-001`.
+2. **Given** a second mission with identical parameters on the same day, **When** created, **Then** its ID is `ENTERPRISE-PREPROD-INCIDENT-PVC-SATURATION-20260510-002` (sequential counter).
 3. **Given** a mission ID, **When** looking for related files, **Then** `audit.jsonl` entries, `agent-outputs/` files, and `missions/` Postgres row all use the exact same `mission_id` value.
 
 ---
 
 ### User Story 3 — Multi-Env Dynamic Configuration (Priority: P2)
 
-The operator adds a new environment `rec` to `tenants/carrefour.yaml` (with its cluster endpoints, kubeconfig, prom_url). No code change is required. On next API reload, missions for `env=rec` are correctly isolated to rec endpoints.
+The operator adds a new environment `rec` to `tenants/enterprise.yaml` (with its cluster endpoints, kubeconfig, prom_url). No code change is required. On next API reload, missions for `env=rec` are correctly isolated to rec endpoints.
 
 **Acceptance Scenarios**:
 
-1. **Given** `tenants/carrefour.yaml` has a new entry `rec: { clusters: [...], prom_url: ..., vm_url: ..., kubeconfig: ... }`, **When** `POST /admin/reload-tenants` is called, **Then** `tenant_config.envs` in memory includes `rec` and `MissionIsolationPlugin` enforces isolation for `env=rec`.
+1. **Given** `tenants/enterprise.yaml` has a new entry `rec: { clusters: [...], prom_url: ..., vm_url: ..., kubeconfig: ... }`, **When** `POST /admin/reload-tenants` is called, **Then** `tenant_config.envs` in memory includes `rec` and `MissionIsolationPlugin` enforces isolation for `env=rec`.
 2. **Given** a mission `env=rec` after reload, **When** a tool targets `prom_url` of `preprod`, **Then** it is blocked.
-3. **Given** an invalid `tenants/carrefour.yaml` (missing required field `prom_url` for an env), **When** reload is attempted, **Then** the API returns a 400 with validation errors and the previous config stays active.
+3. **Given** an invalid `tenants/enterprise.yaml` (missing required field `prom_url` for an env), **When** reload is attempted, **Then** the API returns a 400 with validation errors and the previous config stays active.
 
 ---
 
@@ -54,7 +54,7 @@ The operator adds a new environment `rec` to `tenants/carrefour.yaml` (with its 
 
 - What if `intake_agent` assigns `env=unknown` because the ticket had no clear env marker? → Mission creation is aborted. Trigger logged as "rejected: env_ambiguous". The user can manually create a mission from `/triggers/ignored` with explicit env selection.
 - What if the kubeconfig for the target env is expired or unreachable? → Tool call fails with a user-visible error in the UI. Mission continues (partial audit is acceptable). `cluster_health` returns "UNREACHABLE" status for that cluster.
-- What if `tenants/carrefour.yaml` grows to 10+ envs? → The plugin does O(n) lookup through envs dict — acceptable for ≤20 envs. Beyond that, a Postgres-backed env registry will be considered (v1).
+- What if `tenants/enterprise.yaml` grows to 10+ envs? → The plugin does O(n) lookup through envs dict — acceptable for ≤20 envs. Beyond that, a Postgres-backed env registry will be considered (v1).
 - What if two tenants are deployed (future multi-tenant) and a mission of tenant A tries to reach a cluster of tenant B? → `MissionIsolationPlugin` also checks `tenant` on every tool call. Cross-tenant access is blocked.
 
 ---
@@ -83,7 +83,7 @@ The operator adds a new environment `rec` to `tenants/carrefour.yaml` (with its 
 ## Success Criteria
 
 - **SC-001**: 100% of cross-env tool call attempts are blocked and logged (verified by E2E test covering all 5 tools).
-- **SC-002**: Adding a new env to `tenants/carrefour.yaml` + calling `POST /admin/reload-tenants` takes effect within 5 seconds, no restart.
+- **SC-002**: Adding a new env to `tenants/enterprise.yaml` + calling `POST /admin/reload-tenants` takes effect within 5 seconds, no restart.
 - **SC-003**: `MISSION_ID` sequential counter produces no duplicates under 10 concurrent mission creations (load test).
 - **SC-004**: `MissionIsolationPlugin` adds <50ms overhead per tool call (benchmark in CI).
 - **SC-005**: `MISSION_ID` subject field rejects invalid slugs: `re.match(r'^[a-z0-9]+(-[a-z0-9]+)*$', subject)` — regression test for bug observed in `gemini-kafka-ops-extension` (slug leaked YAML comment).

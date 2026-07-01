@@ -30,7 +30,7 @@ PHX_99999_PAYLOAD = {
         "status": {"name": "Open"},
         "issuetype": {"name": "Incident"},
         "project": {"key": "PHX"},
-        "assignee": {"name": "arabaaoui"},
+        "assignee": {"name": "ops-user"},
         "labels": ["env:preprod", "kafka"],
         "customfield_10200": "preprod",
     },
@@ -43,7 +43,7 @@ PHX_CLOSED_PAYLOAD = {
         "status": {"name": "Closed"},
         "issuetype": {"name": "Incident"},
         "project": {"key": "PHX"},
-        "assignee": {"name": "arabaaoui"},
+        "assignee": {"name": "ops-user"},
         "labels": [],
     },
 }
@@ -58,7 +58,7 @@ def _make_rule(
 ) -> FilterRule:
     return FilterRule(
         id=id,
-        tenant="carrefour",
+        tenant="enterprise",
         scope="jira",
         name=name,
         enabled=True,
@@ -138,7 +138,7 @@ async def test_matched_issue_enqueues_mission():
     item = queue.get_nowait()
     assert item["source"] == "jira"
     assert item["external_id"] == "PHX-99999"
-    assert item["tenant"] == "carrefour"
+    assert item["tenant"] == "enterprise"
     assert item["payload"] == PHX_99999_PAYLOAD
 
 

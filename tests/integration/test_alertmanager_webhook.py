@@ -65,7 +65,7 @@ def _make_rule(
     name: str = "Kafka alerts",
     priority: int = 10,
     criteria: dict | None = None,
-    tenant: str = "carrefour",
+    tenant: str = "enterprise",
 ) -> FilterRule:
     return FilterRule(
         id=id,
@@ -110,7 +110,7 @@ def _make_handler(
     db: AsyncMock,
     rules: list[FilterRule] | None = None,
     trigger_exists: bool = False,
-    tenant: str = "carrefour",
+    tenant: str = "enterprise",
 ) -> AlertmanagerWebhookHandler:
     queue: asyncio.Queue = asyncio.Queue()
     handler = AlertmanagerWebhookHandler(
@@ -160,7 +160,7 @@ async def test_broker_down_mission_enqueued():
     handler = AlertmanagerWebhookHandler(
         db_conn=db,
         mission_queue=queue,
-        tenant="carrefour",
+        tenant="enterprise",
     )
 
     await handler.handle(payload)
@@ -168,7 +168,7 @@ async def test_broker_down_mission_enqueued():
     assert not queue.empty()
     item = queue.get_nowait()
     assert item["source"] == "alertmanager"
-    assert item["tenant"] == "carrefour"
+    assert item["tenant"] == "enterprise"
 
 
 # ── Test: cluster matching no active rule → rejected ─────────────────────────
@@ -192,7 +192,7 @@ async def test_no_matching_rule_trigger_not_matched():
     handler = AlertmanagerWebhookHandler(
         db_conn=db,
         mission_queue=queue,
-        tenant="carrefour",
+        tenant="enterprise",
     )
 
     result = await handler.handle(payload)
@@ -218,7 +218,7 @@ async def test_no_matching_rule_filter_match_log_written():
     handler = AlertmanagerWebhookHandler(
         db_conn=db,
         mission_queue=queue,
-        tenant="carrefour",
+        tenant="enterprise",
     )
 
     await handler.handle(payload)
@@ -275,7 +275,7 @@ async def test_resolved_alerts_not_processed():
     handler = AlertmanagerWebhookHandler(
         db_conn=db,
         mission_queue=queue,
-        tenant="carrefour",
+        tenant="enterprise",
     )
 
     result = await handler.handle(payload)
@@ -308,7 +308,7 @@ async def test_already_seen_alert_not_enqueued():
     handler = AlertmanagerWebhookHandler(
         db_conn=db,
         mission_queue=queue,
-        tenant="carrefour",
+        tenant="enterprise",
     )
 
     result = await handler.handle(payload)
@@ -364,7 +364,7 @@ async def test_multiple_firing_alerts_all_processed():
     handler = AlertmanagerWebhookHandler(
         db_conn=db,
         mission_queue=queue,
-        tenant="carrefour",
+        tenant="enterprise",
     )
 
     result = await handler.handle(payload)

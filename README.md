@@ -109,19 +109,18 @@ flowchart TD
     PIPE --> PGV
 
     %% Style Definitions
-    classDef blueNode fill:#0d1117,stroke:#58a6ff,stroke-width:1px,color:#fff;
-    classDef yellowNode fill:#0d1117,stroke:#d29922,stroke-width:1px,color:#fff;
-    classDef greenNode fill:#0d1117,stroke:#3fb950,stroke-width:1px,color:#fff;
-    classDef purpleNode fill:#0d1117,stroke:#d2a8ff,stroke-width:1px,color:#fff;
-    classDef orangeNode fill:#0d1117,stroke:#f0883e,stroke-width:1px,color:#fff;
-    classDef tealNode fill:#0d1117,stroke:#2dd4bf,stroke-width:1px,color:#fff;
+    classDef blueNode fill:#1f6feb,stroke:#58a6ff,stroke-width:1px,color:#fff;
+    classDef yellowNode fill:#d29922,stroke:#f0883e,stroke-width:1px,color:#fff;
+    classDef greenNode fill:#238636,stroke:#3fb950,stroke-width:1px,color:#fff;
+    classDef purpleNode fill:#8957e5,stroke:#d2a8ff,stroke-width:1px,color:#fff;
+    classDef darkNode fill:#161b22,stroke:#30363d,stroke-width:1px,color:#8b949e;
 
     class JM,AM,UI,JIRA,TRIG blueNode;
     class FR,JQL,LOG,FE,PM,LF yellowNode;
     class DB,WORK,W,PGV greenNode;
     class PT,PAR purpleNode;
     class KE orangeNode;
-    class IA,EC,PIPE,OUT,SRE tealNode;
+    class IA,EC,PIPE,OUT,SRE,OUT tealNode;
 ```
 
 ---
@@ -213,6 +212,15 @@ flowchart TD
     P1 --> P2 --> P3 --> P4 --> P5 --> P6 --> P7 --> P8 --> P9
     P9 --> EXEC["Exécution de l'Outil (kafka-agent-toolkit)"]
     EXEC --> RET(["Retour Résultat à l'Agent"])
+
+    %% Style Definitions
+    classDef blueNode fill:#1f6feb,stroke:#58a6ff,stroke-width:1px,color:#fff;
+    classDef purpleNode fill:#8957e5,stroke:#d2a8ff,stroke-width:1px,color:#fff;
+    classDef greenNode fill:#238636,stroke:#3fb950,stroke-width:1px,color:#fff;
+
+    class REQ,RET blueNode;
+    class P1,P2,P3,P4,P5,P6,P7,P8,P9 purpleNode;
+    class EXEC greenNode;
 ```
 
 ---
@@ -245,15 +253,13 @@ flowchart TD
     PROMPT -->|Ancrage des réponses| AGENTS
 
     %% Styling
-    classDef main fill:#1f6feb,stroke:#58a6ff,stroke-width:1px,color:#fff;
-    classDef sub fill:#161b22,stroke:#30363d,stroke-width:2px,color:#fff;
-    classDef db fill:#238636,stroke:#3fb950,stroke-width:1px,color:#fff;
-    classDef out fill:#8957e5,stroke:#d2a8ff,stroke-width:1px,color:#fff;
+    classDef blueNode fill:#1f6feb,stroke:#58a6ff,stroke-width:1px,color:#fff;
+    classDef greenNode fill:#238636,stroke:#3fb950,stroke-width:1px,color:#fff;
+    classDef purpleNode fill:#8957e5,stroke:#d2a8ff,stroke-width:1px,color:#fff;
     
-    class TR,EMB main;
-    class DB sub;
-    class KB,AUD db;
-    class TOP,PROMPT,AGENTS out;
+    class TR,EMB blueNode;
+    class KB,AUD,DB greenNode;
+    class TOP,PROMPT,AGENTS purpleNode;
 ```
 
 ### 1. Dual Vector Sources
@@ -282,10 +288,10 @@ Chaque investigation reçoit un identifiant de mission immuable, hautement struc
 flowchart TD
     subgraph MID["Anatomie du Mission ID"]
         direction LR
-        A["CARREFOUR"] --- B["PREPROD"] --- C["INCIDENT"] --- D["PVC-SATURATION"] --- E["20260520"] --- F["001"]
+        A["ENTERPRISE"] --- B["PREPROD"] --- C["INCIDENT"] --- D["PVC-SATURATION"] --- E["20260520"] --- F["001"]
     end
 
-    A1["<b>TENANT</b><br><i>Identifiant de configuration (ex: CARREFOUR)</i>"] --> A
+    A1["<b>TENANT</b><br><i>Identifiant de configuration (ex: ENTERPRISE)</i>"] --> A
     B1["<b>ENV</b><br><i>Environnement cible (ex: PREPROD)</i>"] --> B
     C1["<b>TYPE</b><br><i>Type de déclencheur (ex: INCIDENT, ALERTE)</i>"] --> C
     D1["<b>SUBJECT</b><br><i>Sujet de la panne (ex: kebab-case, max 30 char)</i>"] --> D
@@ -297,8 +303,8 @@ flowchart TD
     style B fill:#238636,stroke:#3fb950,stroke-width:1px,color:#fff
     style C fill:#d29922,stroke:#f0883e,stroke-width:1px,color:#fff
     style D fill:#8957e5,stroke:#d2a8ff,stroke-width:1px,color:#fff
-    style E fill:#f85149,stroke:#f85149,stroke-width:1px,color:#fff
-    style F fill:#21262d,stroke:#30363d,stroke-width:1px,color:#fff
+    style E fill:#161b22,stroke:#30363d,stroke-width:1px,color:#fff
+    style F fill:#161b22,stroke:#30363d,stroke-width:1px,color:#fff
 ```
 
 ---

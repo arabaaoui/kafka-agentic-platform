@@ -14,7 +14,7 @@ from core.tenant import TenantRegistry
 @pytest.fixture()
 def tenants_dir(tmp_path) -> Path:
     content = textwrap.dedent("""\
-        tenant: carrefour
+        tenant: enterprise
         envs:
           preprod:
             clusters: [kafka-preprod]
@@ -22,7 +22,7 @@ def tenants_dir(tmp_path) -> Path:
             prom_url: https://prom.preprod.example.com
             vm_url: https://vm.preprod.example.com
     """)
-    (tmp_path / "carrefour.yaml").write_text(content)
+    (tmp_path / "enterprise.yaml").write_text(content)
     return tmp_path
 
 

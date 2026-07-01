@@ -68,7 +68,7 @@ Since developers run the platform on their local PC, their personal identity act
     environment:
       - GOOGLE_APPLICATION_CREDENTIALS=/root/.config/gcloud-host/application_default_credentials.json
     ```
-3.  **Permissions**: The developer's Carrefour email must be granted `roles/iam.serviceAccountTokenCreator` on the Environment GSAs.
+3.  **Permissions**: The developer's Enterprise email must be granted `roles/iam.serviceAccountTokenCreator` on the Environment GSAs.
 
 ---
 

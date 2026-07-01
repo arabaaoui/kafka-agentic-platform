@@ -20,8 +20,8 @@ Build the v0 read-only incident auto-triage pipeline: Jira poller and Alertmanag
 **Target Platform**: Linux server (Docker Compose local dev, Kubernetes/GKE preprod/prod)
 **Project Type**: Web service (FastAPI backend + Next.js frontend) + agentic pipeline
 **Performance Goals**: Mission created within 60s of Jira poll; full audit delivered within 5 minutes of mission creation; Alertmanager webhook matched within 10 seconds
-**Constraints**: Read-only v0 (L2 autonomy — no mutating tools); zero cross-env tool calls; zero secrets in audit.jsonl; all Carrefour-specific values in `tenants/carrefour.yaml` only
-**Scale/Scope**: Single tenant (Carrefour), 2 envs (preprod, prod), ~5 missions/day in dogfooding phase, 15 Promptfoo eval cases
+**Constraints**: Read-only v0 (L2 autonomy — no mutating tools); zero cross-env tool calls; zero secrets in audit.jsonl; all Enterprise-specific values in `tenants/enterprise.yaml` only
+**Scale/Scope**: Single tenant (Enterprise), 2 envs (preprod, prod), ~5 missions/day in dogfooding phase, 15 Promptfoo eval cases
 
 ---
 
@@ -37,7 +37,7 @@ Build the v0 read-only incident auto-triage pipeline: Jira poller and Alertmanag
 | IV | Eval suite CI ≥80% | PASS | 15 calibrated cases in `evals/cases/` (5 lag, 3 promrule, 4 pvc, 3 consolidation). Promptfoo run is a blocking CI check (SC-005). Each new agent/tool in this spec ships with ≥1 eval case. |
 | V | Zero secret leakage in audit logs | PASS | `AuditPlugin` applies redaction list before writing `audit.jsonl`. CI grep test: `grep -iE 'password\|secret\|token\|api_key\|kubeconfig'` must return 0 (FR-009, SC-007). |
 | VI | Skills = SKILL.md filesystem | PASS | Each agent directory contains `SKILL.md` as single source of truth. Hot-reload via `watchfiles` in dev. No skill data in Postgres. |
-| VII | No Carrefour hardcode in core/agents/triggers/api/ | PASS | All Carrefour-specific values (cluster names, namespaces, Jira project, poll intervals) live exclusively in `tenants/carrefour.yaml`. `intake_agent` reads tenant config at runtime. Second tenant addable via new yaml file only. |
+| VII | No Enterprise hardcode in core/agents/triggers/api/ | PASS | All Enterprise-specific values (cluster names, namespaces, Jira project, poll intervals) live exclusively in `tenants/enterprise.yaml`. `intake_agent` reads tenant config at runtime. Second tenant addable via new yaml file only. |
 | VIII | Filter rules = Postgres runtime | PASS | `filter_rules` table in Postgres (JSONB `criteria`). Editable via `/settings/filters` UI without restart. Bootstrap rule inserted by migration `0001_initial.sql`, overridable immediately. No filter hardcoded in source or YAML. |
 
 ---
@@ -126,7 +126,7 @@ migrations/
 └── 0001_initial.sql      # Creates missions, triggers, filter_rules, audits, agent_outputs, filter_match_log
 
 tenants/
-└── carrefour.yaml        # All Carrefour-specific values (clusters, namespaces, Jira project, envs)
+└── enterprise.yaml        # All Enterprise-specific values (clusters, namespaces, Jira project, envs)
 
 evals/
 └── cases/
@@ -174,7 +174,7 @@ tests/
 | Column | Type | Notes |
 |--------|------|-------|
 | id | TEXT PK | MISSION_ID format: `{TENANT}-{ENV}-{TYPE}-{SUBJECT}-{YYYYMMDD}-{SEQ:03d}` |
-| tenant | TEXT NOT NULL | e.g. `carrefour` |
+| tenant | TEXT NOT NULL | e.g. `enterprise` |
 | env | TEXT NOT NULL | `preprod`, `prod`, `lab` |
 | cluster | TEXT NOT NULL | e.g. `kafka-preprod` |
 | type | TEXT NOT NULL | e.g. `INCIDENT` |

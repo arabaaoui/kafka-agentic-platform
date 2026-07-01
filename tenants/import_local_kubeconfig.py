@@ -19,12 +19,12 @@ async def import_local_kubeconfig():
     # Actually, I'll just write the data directly in this script since I already read it.
     
     envs_to_import = [
-        {"slug": "dev", "name": "gke-dev", "cluster": "gke_vg1np-pf-phenix-caas-1a_europe-west1_phenix-dev-gke"},
-        {"slug": "rec", "name": "gke-rec", "cluster": "gke_vg1np-pf-phenix-caas-1a_europe-west1_phenix-recgke"},
-        {"slug": "preprod", "name": "gke-preprod", "cluster": "gke_vg1p-pf-phenix-caas-78_europe-west1_phenix-preprod-gke"},
-        {"slug": "prod", "name": "gke-prod", "cluster": "gke_vg1p-pf-phenix-caas-78_europe-west1_phenix-productiongke"},
-        {"slug": "kh-preprod", "name": "gke-kafkahub-preprod", "cluster": "gke_vg1np-pf-phenix-khpre-3a_europe-west1_kafkahub-preprod-gke"},
-        {"slug": "kh-prod", "name": "gke-kafkahub-prod", "cluster": "gke_vg1p-pf-phenix-khprd-11_europe-west1_kafkahub-prod-gke"},
+        {"slug": "dev", "name": "gke-dev", "cluster": "gke-enterprise-dev-cluster"},
+        {"slug": "rec", "name": "gke-rec", "cluster": "gke-enterprise-rec-cluster"},
+        {"slug": "preprod", "name": "gke-preprod", "cluster": "gke-enterprise-preprod-cluster"},
+        {"slug": "prod", "name": "gke-prod", "cluster": "gke-enterprise-prod-cluster"},
+        {"slug": "kh-preprod", "name": "gke-kafkahub-preprod", "cluster": "gke-enterprise-kh-preprod-cluster"},
+        {"slug": "kh-prod", "name": "gke-kafkahub-prod", "cluster": "gke-enterprise-kh-prod-cluster"},
     ]
 
     # I need the actual content from the file for each.
@@ -42,7 +42,7 @@ async def import_local_kubeconfig():
             
             # Check if exists
             res = await conn.execute(
-                text("SELECT id FROM infrastructure_envs WHERE tenant = 'carrefour' AND slug = :slug"),
+                text("SELECT id FROM infrastructure_envs WHERE tenant = 'enterprise' AND slug = :slug"),
                 {"slug": slug}
             )
             row = res.fetchone()
@@ -61,7 +61,7 @@ async def import_local_kubeconfig():
             if not row:
                 stmt = text("""
                     INSERT INTO infrastructure_envs (id, tenant, slug, display_name, badge_color, clusters, kubeconfig, kubeconfig_content, kafka_namespace, prom_url, vm_url, created_at, updated_at)
-                    VALUES (:id, 'carrefour', :slug, :dn, :bc, :cl, '', '', 'kafka', :pu, '', :now, :now)
+                    VALUES (:id, 'enterprise', :slug, :dn, :bc, :cl, '', '', 'kafka', :pu, '', :now, :now)
                 """)
                 await conn.execute(stmt, {
                     "id": str(uuid.uuid4()),

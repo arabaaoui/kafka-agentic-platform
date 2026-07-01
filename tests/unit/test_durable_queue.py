@@ -39,7 +39,7 @@ async def test_claim_next_returns_none_when_empty():
 
 @pytest.mark.asyncio
 async def test_claim_next_returns_dict_when_row_available():
-    row = {"id": "abc", "tenant": "carrefour", "source": "jira", "attempts": 1}
+    row = {"id": "abc", "tenant": "enterprise", "source": "jira", "attempts": 1}
     session, _ = _make_session(mappings_return=row)
     result = await claim_next(session, "worker-0")
     assert result == row

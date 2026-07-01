@@ -1,7 +1,7 @@
 """Mission context — the primary runtime object threaded through all agents and plugins.
 
 MISSION_ID format: {TENANT}-{ENV}-{TYPE}-{SUBJECT}-{YYYYMMDD}-{SEQ:03d}
-Example: CARREFOUR-PREPROD-INCIDENT-PVC-SATURATION-20260510-001
+Example: ENTERPRISE-PREPROD-INCIDENT-PVC-SATURATION-20260510-001
 
 Subject validation reuses the kebab-case slug regex from kafka-agent-toolkit,
 with max_len=30 (spec 003 FR-002). This is a regression guard for the production bug
@@ -79,7 +79,7 @@ class MissionContext(BaseModel):
             raise ValueError(
                 f"Invalid MISSION_ID format: {v!r}. "
                 "Expected: TENANT-ENV-TYPE-SUBJECT-YYYYMMDD-SEQ "
-                "(e.g. CARREFOUR-PREPROD-INCIDENT-PVC-SATURATION-20260510-001)"
+                "(e.g. ENTERPRISE-PREPROD-INCIDENT-PVC-SATURATION-20260510-001)"
             )
         return v
 

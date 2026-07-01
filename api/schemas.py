@@ -87,7 +87,7 @@ class AuditResponse(BaseModel):
 
 
 class FilterRuleCreate(BaseModel):
-    tenant: str = "carrefour"
+    tenant: str = "enterprise"
     scope: Literal["jira", "alertmanager", "care"]
     name: str
     enabled: bool = True

@@ -7,8 +7,8 @@ from core.jira_formatter import (
 )
 
 _SAMPLE_AUDIT = """\
-# Audit — CARREFOUR-PREPROD-INCIDENT-PVC-SATURATION-20260510-001
-**Tenant**: carrefour | **Env**: PREPROD
+# Audit — ENTERPRISE-PREPROD-INCIDENT-PVC-SATURATION-20260510-001
+**Tenant**: enterprise | **Env**: PREPROD
 
 ---
 
@@ -48,7 +48,7 @@ kafka-strimzi says broker healthy; k8s-sre says PVC at 95%.
 
 _PARTIAL_AUDIT = """\
 ⚠ PARTIAL AUDIT — all expert agents failed to produce output.
-Mission ID: CARREFOUR-PREPROD-INCIDENT-X-20260510-001
+Mission ID: ENTERPRISE-PREPROD-INCIDENT-X-20260510-001
 """
 
 

@@ -1,6 +1,6 @@
 """Tenant configuration loader — reads tenants/{tenant}.yaml at runtime.
 
-All Carrefour-specific values live in tenants/carrefour.yaml.
+All Enterprise-specific values live in tenants/enterprise.yaml.
 No tenant value may appear in this module (constitution VII).
 """
 

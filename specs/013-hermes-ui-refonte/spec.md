@@ -136,7 +136,7 @@ En tant que responsable de la plateforme, je veux consulter les coûts d'utilisa
 - **EF-012** : L'interface DOIT proposer une liste filtrable de toutes les compétences disponibles dans la plateforme.
 - **EF-013** : L'interface DOIT afficher les coûts estimés d'utilisation du modèle de langage groupés par locataire, environnement et agent (Phase 3, conditionnel).
 - **EF-014** : Tous les libellés, messages, titres de page, noms de colonnes et libellés d'actions DOIVENT être en langue française.
-- **EF-015** : Le design system Carrefour (composants et jetons de couleur existants) DOIT être utilisé comme source unique de style — aucune couleur ne doit être codée en dur.
+- **EF-015** : Le design system Enterprise (composants et jetons de couleur existants) DOIT être utilisé comme source unique de style — aucune couleur ne doit être codée en dur.
 - **EF-016** : Les actions existantes (Finaliser, Publier sur Jira, filtrer les missions, gérer la base de connaissances, gérer les déclencheurs) DOIVENT continuer à fonctionner sans modification ni régression.
 
 ### Entités clés

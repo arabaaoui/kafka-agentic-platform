@@ -26,7 +26,7 @@ Every agent mission is bound at creation to a single environment (`preprod`, `pr
 | Rule | Status | Notes |
 |------|--------|-------|
 | **II — Safety enforcement by plugin, not convention** | PASS | `MissionIsolationPlugin` is the core deliverable of this spec. Cross-env access is blocked at the plugin layer, not left to agent discretion. |
-| **VII — Tenant data stays in `tenants/`, nothing tenant-specific in `core/`** | PASS | `tenants/carrefour.yaml` lives in `tenants/`. All logic in `core/` is tenant-agnostic (keyed by `tenant` string, not hardcoded). |
+| **VII — Tenant data stays in `tenants/`, nothing tenant-specific in `core/`** | PASS | `tenants/enterprise.yaml` lives in `tenants/`. All logic in `core/` is tenant-agnostic (keyed by `tenant` string, not hardcoded). |
 | **I — Single responsibility per module** | PASS | `core/mission.py` owns MissionContext only; `core/tenant.py` owns config loading only; `core/mission_isolation.py` owns the plugin only. |
 | **III — No restart required for config changes** | PASS | `POST /admin/reload-tenants` hot-swaps in-memory `TenantConfig` under a `threading.Lock`. |
 | **V — Validation at boundary** | PASS | Pydantic v2 validates `TenantConfig`/`EnvConfig` on every reload. Invalid YAML is rejected with 400 before touching active config. |
@@ -65,7 +65,7 @@ api/
     └── admin.py             # POST /admin/reload-tenants → reload TenantRegistry, return 200/400
 
 tenants/
-└── carrefour.yaml           # Carrefour tenant config (preprod env pre-configured)
+└── enterprise.yaml           # Enterprise tenant config (preprod env pre-configured)
 
 db/
 └── migrations/
@@ -105,7 +105,7 @@ tests/
 | Audit existing `audit.jsonl` write path | Confirm format used by `AuditPlugin` so `MissionIsolationPlugin` emits consistent entries |
 | Audit existing FastAPI app entrypoint | Confirm how `api/routes/` are registered, confirm admin blueprint exists or needs creating |
 | Audit Postgres connection pool | Confirm which library (asyncpg vs psycopg2) is in use, confirm pool is accessible from `core/mission.py` |
-| Verify `tenants/` directory exists and `carrefour.yaml` schema | Confirm YAML structure already matches `TenantConfig`/`EnvConfig` field names or document delta |
+| Verify `tenants/` directory exists and `enterprise.yaml` schema | Confirm YAML structure already matches `TenantConfig`/`EnvConfig` field names or document delta |
 
 ### Phase 1 — Design Artifacts
 
@@ -128,8 +128,8 @@ Deliverables: `data-model.md`, `contracts/cross_env_blocked.md`, `contracts/relo
 
 **contracts/reload_api.md** covers:
 - `POST /admin/reload-tenants` request body (none required; optional `?dir=` param)
-- Success response `200`: `{ "loaded": ["carrefour"], "envs": { "carrefour": ["preprod", "prod"] } }`
-- Error response `400`: `{ "errors": [{ "tenant": "carrefour", "detail": "EnvConfig.prom_url missing" }] }`
+- Success response `200`: `{ "loaded": ["enterprise"], "envs": { "enterprise": ["preprod", "prod"] } }`
+- Error response `400`: `{ "errors": [{ "tenant": "enterprise", "detail": "EnvConfig.prom_url missing" }] }`
 - Threading contract: `threading.Lock` acquired for atomic swap; readers always see a consistent `TenantConfig`
 
 ### Phase 2 — Implementation Order
@@ -142,7 +142,7 @@ Dependencies are strictly respected: models first, then loading, then plugin, th
 4. **`core/mission_isolation.py`** — `CrossEnvAccessBlocked`, `MissionIsolationPlugin.before_tool_callback()`
 5. **`core/plugins.py`** — register `MissionIsolationPlugin` in `PluginChain` (between `AuditPlugin` and `AutonomyPlugin`)
 6. **`api/routes/admin.py`** — `POST /admin/reload-tenants` endpoint
-7. **`tenants/carrefour.yaml`** — validate/update schema to match `TenantConfig`/`EnvConfig`
+7. **`tenants/enterprise.yaml`** — validate/update schema to match `TenantConfig`/`EnvConfig`
 8. **`tests/unit/test_mission.py`** — MISSION_ID, slug validation, SEQ zero-padding
 9. **`tests/unit/test_tenant.py`** — config load, Pydantic rejection, multi-env
 10. **`tests/unit/test_mission_isolation.py`** — cross-env block, same-env allow, env-agnostic allow, cross-tenant block, audit entry

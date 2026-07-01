@@ -1,12 +1,12 @@
 description: "K8sGcpSreAgent — GKE pod CrashLoopBackOff investigation identifies K8s root cause with correct tool usage (WS-2/WS-3 plugin chain migration)"
 prompt: expert_k8s_investigate
 vars:
-  mission_id: "CARREFOUR-PREPROD-TEST-POD-CRASH-20260601-002"
+  mission_id: "ENTERPRISE-PREPROD-TEST-POD-CRASH-20260601-002"
   env: "PREPROD"
   cluster: "kafka-preprod"
   subject: "pod-crash"
   task: |
-    Mission CARREFOUR-PREPROD-TEST-POD-CRASH-20260601-002 (env=PREPROD, cluster=kafka-preprod)
+    Mission ENTERPRISE-PREPROD-TEST-POD-CRASH-20260601-002 (env=PREPROD, cluster=kafka-preprod)
 
     Alert: Kafka broker pod kafka-broker-2 is in CrashLoopBackOff state.
     The pod has restarted 8 times in the last 20 minutes.

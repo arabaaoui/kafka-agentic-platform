@@ -8,7 +8,7 @@ vars:
       "title": "[INCIDENT] Elasticsearch cluster degraded — shard allocation failure",
       "description": "Primary shards of index catalog-search-v3 are unassigned. Cluster health is RED.",
       "project": "PKH",
-      "assignee": "arabaaoui",
+      "assignee": "ops-user",
       "status": "Open",
       "priority": "High",
       "labels": ["elasticsearch", "search", "infra"]

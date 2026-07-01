@@ -17,10 +17,10 @@ from core.mission import (
 
 def test_build_mission_id_canonical():
     mid = build_mission_id(
-        "carrefour", "preprod", MissionType.INCIDENT, "pvc-saturation",
+        "enterprise", "preprod", MissionType.INCIDENT, "pvc-saturation",
         date(2026, 5, 10), 1,
     )
-    assert mid == "CARREFOUR-PREPROD-INCIDENT-PVC-SATURATION-20260510-001"
+    assert mid == "ENTERPRISE-PREPROD-INCIDENT-PVC-SATURATION-20260510-001"
 
 
 def test_build_mission_id_seq_padding():
@@ -33,10 +33,10 @@ def test_build_mission_id_seq_padding():
 
 def test_build_mission_id_uppercase_inputs():
     mid = build_mission_id(
-        "carrefour", "dev", MissionType.MAINTENANCE, "lag-urp",
+        "enterprise", "dev", MissionType.MAINTENANCE, "lag-urp",
         date(2026, 5, 10), 7,
     )
-    assert mid.startswith("CARREFOUR-DEV-MAINTENANCE-LAG-URP-")
+    assert mid.startswith("ENTERPRISE-DEV-MAINTENANCE-LAG-URP-")
 
 
 # ── MissionContext — valid construction ───────────────────────────────────────
@@ -44,15 +44,15 @@ def test_build_mission_id_uppercase_inputs():
 
 def test_mission_context_valid():
     ctx = MissionContext(
-        mission_id="CARREFOUR-PREPROD-INCIDENT-PVC-SATURATION-20260510-001",
-        tenant="carrefour",
+        mission_id="ENTERPRISE-PREPROD-INCIDENT-PVC-SATURATION-20260510-001",
+        tenant="enterprise",
         env="preprod",
         cluster="kafkahub-preprod",
         type=MissionType.INCIDENT,
         subject="pvc-saturation",
     )
-    assert ctx.mission_id == "CARREFOUR-PREPROD-INCIDENT-PVC-SATURATION-20260510-001"
-    assert ctx.tenant == "CARREFOUR"  # uppercased by validator
+    assert ctx.mission_id == "ENTERPRISE-PREPROD-INCIDENT-PVC-SATURATION-20260510-001"
+    assert ctx.tenant == "ENTERPRISE"  # uppercased by validator
     assert ctx.env == "PREPROD"
     assert ctx.status == MissionStatus.OPEN
     assert ctx.autonomy_level == "L2"
@@ -60,8 +60,8 @@ def test_mission_context_valid():
 
 def test_mission_context_frozen():
     ctx = MissionContext(
-        mission_id="CARREFOUR-PREPROD-INCIDENT-PVC-SATURATION-20260510-001",
-        tenant="carrefour",
+        mission_id="ENTERPRISE-PREPROD-INCIDENT-PVC-SATURATION-20260510-001",
+        tenant="enterprise",
         env="preprod",
         cluster="kafkahub-preprod",
         type=MissionType.INCIDENT,
@@ -78,7 +78,7 @@ def test_mission_id_bad_format_rejected():
     with pytest.raises(ValidationError, match="MISSION_ID"):
         MissionContext(
             mission_id="bad-id",
-            tenant="carrefour",
+            tenant="enterprise",
             env="preprod",
             cluster="kafkahub-preprod",
             type=MissionType.INCIDENT,
@@ -89,8 +89,8 @@ def test_mission_id_bad_format_rejected():
 def test_mission_id_lowercase_rejected():
     with pytest.raises(ValidationError):
         MissionContext(
-            mission_id="carrefour-preprod-INCIDENT-pvc-saturation-20260510-001",
-            tenant="carrefour",
+            mission_id="enterprise-preprod-INCIDENT-pvc-saturation-20260510-001",
+            tenant="enterprise",
             env="preprod",
             cluster="c",
             type=MissionType.INCIDENT,
@@ -105,8 +105,8 @@ def test_subject_too_long_rejected():
     long_subject = "a" * 65
     with pytest.raises(ValidationError, match="too long"):
         MissionContext(
-            mission_id="CARREFOUR-PREPROD-INCIDENT-A-20260510-001",
-            tenant="carrefour",
+            mission_id="ENTERPRISE-PREPROD-INCIDENT-A-20260510-001",
+            tenant="enterprise",
             env="preprod",
             cluster="c",
             type=MissionType.INCIDENT,
@@ -117,8 +117,8 @@ def test_subject_too_long_rejected():
 def test_subject_max_len_30_accepted():
     subject_30 = "a" * 30
     ctx = MissionContext(
-        mission_id=f"CARREFOUR-PREPROD-INCIDENT-{'A' * 30}-20260510-001",
-        tenant="carrefour",
+        mission_id=f"ENTERPRISE-PREPROD-INCIDENT-{'A' * 30}-20260510-001",
+        tenant="enterprise",
         env="preprod",
         cluster="c",
         type=MissionType.INCIDENT,
@@ -130,8 +130,8 @@ def test_subject_max_len_30_accepted():
 def test_subject_strips_yaml_comment():
     """SC-005 regression: YAML comment must be stripped before validation."""
     ctx = MissionContext(
-        mission_id="CARREFOUR-PREPROD-INCIDENT-PVC-SATURATION-20260510-001",
-        tenant="carrefour",
+        mission_id="ENTERPRISE-PREPROD-INCIDENT-PVC-SATURATION-20260510-001",
+        tenant="enterprise",
         env="preprod",
         cluster="c",
         type=MissionType.INCIDENT,
@@ -143,8 +143,8 @@ def test_subject_strips_yaml_comment():
 def test_subject_uppercase_rejected():
     with pytest.raises(ValidationError, match="kebab-case"):
         MissionContext(
-            mission_id="CARREFOUR-PREPROD-INCIDENT-PVC-SATURATION-20260510-001",
-            tenant="carrefour",
+            mission_id="ENTERPRISE-PREPROD-INCIDENT-PVC-SATURATION-20260510-001",
+            tenant="enterprise",
             env="preprod",
             cluster="c",
             type=MissionType.INCIDENT,
@@ -155,8 +155,8 @@ def test_subject_uppercase_rejected():
 def test_subject_underscore_rejected():
     with pytest.raises(ValidationError, match="kebab-case"):
         MissionContext(
-            mission_id="CARREFOUR-PREPROD-INCIDENT-PVC-SATURATION-20260510-001",
-            tenant="carrefour",
+            mission_id="ENTERPRISE-PREPROD-INCIDENT-PVC-SATURATION-20260510-001",
+            tenant="enterprise",
             env="preprod",
             cluster="c",
             type=MissionType.INCIDENT,

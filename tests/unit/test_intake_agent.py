@@ -45,7 +45,7 @@ def _jira_payload(
         "status": {"name": status},
         "issuetype": {"name": issuetype},
         "labels": labels or [],
-        "assignee": {"name": "arabaaoui"},
+        "assignee": {"name": "ops-user"},
         "project": {"key": "PHX"},
     }
     if customfield_10200 is not None:
@@ -102,7 +102,7 @@ async def test_classify_env_from_customfield_10200():
     with patch.object(agent, "run", new=AsyncMock(return_value=llm_output)):
         result = await agent.classify(
             trigger_payload=payload,
-            tenant="carrefour",
+            tenant="enterprise",
             source="jira",
         )
 
@@ -124,7 +124,7 @@ async def test_classify_env_from_label():
     with patch.object(agent, "run", new=AsyncMock(return_value=llm_output)):
         result = await agent.classify(
             trigger_payload=payload,
-            tenant="carrefour",
+            tenant="enterprise",
             source="jira",
         )
 
@@ -146,7 +146,7 @@ async def test_classify_env_from_summary_regex():
     with patch.object(agent, "run", new=AsyncMock(return_value=llm_output)):
         result = await agent.classify(
             trigger_payload=payload,
-            tenant="carrefour",
+            tenant="enterprise",
             source="jira",
         )
 
@@ -171,7 +171,7 @@ async def test_classify_env_ambiguous():
     with patch.object(agent, "run", new=AsyncMock(return_value=ambiguous_response)):
         result = await agent.classify(
             trigger_payload=payload,
-            tenant="carrefour",
+            tenant="enterprise",
             source="jira",
         )
 
@@ -194,7 +194,7 @@ async def test_classify_subject_kebab_case():
     with patch.object(agent, "run", new=AsyncMock(return_value=llm_output)):
         result = await agent.classify(
             trigger_payload=payload,
-            tenant="carrefour",
+            tenant="enterprise",
             source="jira",
         )
 
@@ -213,7 +213,7 @@ async def test_classify_subject_broker_down():
     with patch.object(agent, "run", new=AsyncMock(return_value=llm_output)):
         result = await agent.classify(
             trigger_payload=payload,
-            tenant="carrefour",
+            tenant="enterprise",
             source="jira",
         )
 
@@ -234,7 +234,7 @@ async def test_classify_ignored_status():
     with patch.object(agent, "run", new=AsyncMock(return_value=ignored_response)):
         result = await agent.classify(
             trigger_payload=payload,
-            tenant="carrefour",
+            tenant="enterprise",
             source="jira",
         )
 
@@ -255,7 +255,7 @@ async def test_classify_returns_none_on_unparseable_output():
     with patch.object(agent, "run", new=AsyncMock(return_value="Sorry, I cannot help.")):
         result = await agent.classify(
             trigger_payload=payload,
-            tenant="carrefour",
+            tenant="enterprise",
             source="jira",
         )
 
@@ -285,13 +285,13 @@ async def test_classify_full_result_shape():
     with patch.object(agent, "run", new=AsyncMock(return_value=llm_output)):
         result = await agent.classify(
             trigger_payload=payload,
-            tenant="carrefour",
+            tenant="enterprise",
             source="jira",
         )
 
     assert result is not None
     assert not result["rejected"]
-    assert result["tenant"] == "carrefour"
+    assert result["tenant"] == "enterprise"
     assert result["env"] == "PREPROD"
     assert result["cluster"] == "kafka-preprod"
     assert result["subject"] == "pvc-saturation"
@@ -304,9 +304,9 @@ async def test_classify_full_result_shape():
 
 
 @pytest.mark.parametrize("mission_id", [
-    "CARREFOUR-PREPROD-INCIDENT-PVC-SATURATION-20260510-001",
+    "ENTERPRISE-PREPROD-INCIDENT-PVC-SATURATION-20260510-001",
     "TESTCO-PROD-INCIDENT-BROKER-DOWN-20260101-042",
-    "CARREFOUR-PREPROD-REVIEW-CERT-EXPIRY-20260315-007",
+    "ENTERPRISE-PREPROD-REVIEW-CERT-EXPIRY-20260315-007",
     "A1-B-C-D-20260101-001",
 ])
 def test_mission_id_format_valid(mission_id):
@@ -314,11 +314,11 @@ def test_mission_id_format_valid(mission_id):
 
 
 @pytest.mark.parametrize("mission_id", [
-    "carrefour-preprod-INCIDENT-pvc-saturation-20260510-001",  # lowercase
-    "CARREFOUR-PREPROD-20260510-001",                          # missing type/subject
+    "enterprise-preprod-INCIDENT-pvc-saturation-20260510-001",  # lowercase
+    "ENTERPRISE-PREPROD-20260510-001",                          # missing type/subject
     "BAD-ID",
-    "CARREFOUR-PREPROD-INCIDENT-PVC-SATURATION-2026051-001",   # date wrong
-    "CARREFOUR-PREPROD-INCIDENT-PVC-SATURATION-20260510-01",   # seq too short
+    "ENTERPRISE-PREPROD-INCIDENT-PVC-SATURATION-2026051-001",   # date wrong
+    "ENTERPRISE-PREPROD-INCIDENT-PVC-SATURATION-20260510-01",   # seq too short
 ])
 def test_mission_id_format_invalid(mission_id):
     assert not _MISSION_ID_RE.match(mission_id), f"Expected NOT to match: {mission_id!r}"
@@ -337,7 +337,7 @@ async def test_classify_unknown_type_falls_back_to_incident():
     with patch.object(agent, "run", new=AsyncMock(return_value=llm_output)):
         result = await agent.classify(
             trigger_payload=payload,
-            tenant="carrefour",
+            tenant="enterprise",
             source="jira",
         )
 

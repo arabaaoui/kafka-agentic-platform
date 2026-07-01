@@ -1,12 +1,12 @@
 description: "PromAlertTriageAgent — Prometheus alert triage distinguishes false positive from real incident (WS-2/WS-3 plugin chain migration)"
 prompt: expert_prom_investigate
 vars:
-  mission_id: "CARREFOUR-PREPROD-TEST-PROM-ALERT-20260601-003"
+  mission_id: "ENTERPRISE-PREPROD-TEST-PROM-ALERT-20260601-003"
   env: "PREPROD"
   cluster: "kafka-preprod"
   subject: "prom-rule-false-positive"
   task: |
-    Mission CARREFOUR-PREPROD-TEST-PROM-ALERT-20260601-003 (env=PREPROD, cluster=kafka-preprod)
+    Mission ENTERPRISE-PREPROD-TEST-PROM-ALERT-20260601-003 (env=PREPROD, cluster=kafka-preprod)
 
     Alert: KafkaBrokerUnderReplicatedPartitions fired at 14:32 UTC.
     Current value: 3 under-replicated partitions on broker kafka-preprod-broker-1.

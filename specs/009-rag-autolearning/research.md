@@ -52,7 +52,7 @@ Initial question: should agent outputs, audits, and KB cards be stored only in D
 Reasons:
 1. **Debuggability**: a human on-call can read `audits/MISSION_ID/audit.md` directly without a DB query. Markdown is universally readable.
 2. **Agent exchange format**: agents produce and consume Markdown naturally. Replacing it with DB reads would require changing every agent's output handling.
-3. **Rejouabilité / audit trail**: Carrefour compliance and incident review require files that can be versioned, inspected, and attached to Jira. DB rows are harder to share.
+3. **Rejouabilité / audit trail**: Enterprise compliance and incident review require files that can be versioned, inspected, and attached to Jira. DB rows are harder to share.
 4. **IA pattern**: the dominant pattern in agentic systems is to use documents (Markdown, PDFs, text) as the "memory substrate" and vector stores as the "retrieval index" over those documents. The DB is a derived index, not the source.
 5. **Practical**: the existing code already reads and writes Markdown. Migrating to DB-only would require rewriting every agent.
 
@@ -67,7 +67,7 @@ The DB adds a searchable index on top of the Markdown without replacing it. A `s
 LLMs (Claude, Gemini) can compute embeddings via API, but:
 - **Cost**: every mission start would make an API call to embed the subject string
 - **Latency**: API round-trip adds 200–500ms per search
-- **Offline requirement**: the platform must work without internet access (production Carrefour constraint)
+- **Offline requirement**: the platform must work without internet access (production Enterprise constraint)
 
 ### Why multilingual-e5-small specifically?
 

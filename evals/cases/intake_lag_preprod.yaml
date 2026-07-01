@@ -8,7 +8,7 @@ vars:
       "title": "[INCIDENT] KafkaHub PREPROD - Consumer lag exploding on group phenix-etl",
       "description": "Consumer group phenix-etl has accumulated 4.2M messages of lag on topic phenix.orders.v3. Rebalance triggered 3 times in last hour.",
       "project": "PHX",
-      "assignee": "arabaaoui",
+      "assignee": "ops-user",
       "status": "Open",
       "priority": "High",
       "labels": ["kafka", "consumer-lag", "preprod"]

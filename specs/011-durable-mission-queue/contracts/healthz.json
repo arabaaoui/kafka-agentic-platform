@@ -31,14 +31,14 @@
   "examples": [
     {
       "status": "ok",
-      "tenants": ["carrefour"],
+      "tenants": ["enterprise"],
       "worker_count": 3,
       "queue_depth": 2,
       "oldest_pending_age_seconds": 47.3
     },
     {
       "status": "ok",
-      "tenants": ["carrefour"],
+      "tenants": ["enterprise"],
       "worker_count": 1,
       "queue_depth": 0,
       "oldest_pending_age_seconds": null

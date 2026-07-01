@@ -10,7 +10,7 @@ def test_healthz(client):
     assert resp.status_code == 200
     data = resp.json()
     assert data["status"] == "ok"
-    assert "carrefour" in data["tenants"]
+    assert "enterprise" in data["tenants"]
 
 
 def test_reload_tenants_adds_new_tenant(client, tenants_dir):
@@ -30,20 +30,20 @@ def test_reload_tenants_adds_new_tenant(client, tenants_dir):
     data = resp.json()
     assert data["status"] == "ok"
     assert "newclient" in data["tenants"]
-    assert "carrefour" in data["tenants"]
+    assert "enterprise" in data["tenants"]
 
 
 def test_reload_tenants_keeps_previous_on_all_invalid(client, tenants_dir):
     """If all YAMLs become invalid, reload raises 500 and previous state survives."""
     # Break the only valid file
-    (tenants_dir / "carrefour.yaml").write_text("tenant: bad\nenvs: {}")
+    (tenants_dir / "enterprise.yaml").write_text("tenant: bad\nenvs: {}")
     resp = client.post("/admin/reload-tenants")
     assert resp.status_code == 500
 
 
 def test_reload_tenants_removes_deleted_tenant(client, tenants_dir):
     """Deleting a YAML file removes the tenant from the registry after reload."""
-    (tenants_dir / "carrefour.yaml").unlink()
+    (tenants_dir / "enterprise.yaml").unlink()
     # Add a replacement so reload doesn't fail with zero tenants
     replacement = textwrap.dedent("""\
         tenant: replacement
@@ -56,5 +56,5 @@ def test_reload_tenants_removes_deleted_tenant(client, tenants_dir):
     (tenants_dir / "replacement.yaml").write_text(replacement)
     resp = client.post("/admin/reload-tenants")
     assert resp.status_code == 200
-    assert "carrefour" not in resp.json()["tenants"]
+    assert "enterprise" not in resp.json()["tenants"]
     assert "replacement" in resp.json()["tenants"]

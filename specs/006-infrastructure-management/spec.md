@@ -43,7 +43,7 @@ An engineer wants to connect the platform to a new GKE cluster using a dedicated
 
 The platform lead wants to know who changed an environment configuration.
 
-**Why this priority**: Governance and traceability (Carrefour engineering standards).
+**Why this priority**: Governance and traceability (Enterprise engineering standards).
 
 **Independent Test**: Modify an environment and check the "Admin Audit" menu for the corresponding `UPDATE_INFRA_ENV` entry.
 

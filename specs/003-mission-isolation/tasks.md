@@ -51,7 +51,7 @@
 - [ ] T016 [US1] [P] In `tests/unit/test_mission_isolation.py` — test: cross-env block prod->preprod raises `CrossEnvAccessBlocked` (bidirectional, per spec US1 scenario 4)
 - [ ] T017 [US1] [P] In `tests/unit/test_mission_isolation.py` — test: same-env tool call (preprod->preprod prom_url) proceeds without exception
 - [ ] T018 [US1] [P] In `tests/unit/test_mission_isolation.py` — test: env-agnostic tool call (`c4-atlassian`, `gitlab` MCP) is never blocked regardless of `mission.env` (FR-003)
-- [ ] T019 [US1] [P] In `tests/unit/test_mission_isolation.py` — test: cross-tenant block — mission with `tenant=carrefour` blocked from calling tool targeting `tenant=acme` endpoint
+- [ ] T019 [US1] [P] In `tests/unit/test_mission_isolation.py` — test: cross-tenant block — mission with `tenant=enterprise` blocked from calling tool targeting `tenant=acme` endpoint
 - [ ] T020 [US1] [P] In `tests/unit/test_mission_isolation.py` — test: audit.jsonl entry format after cross-env block — assert JSON keys `event`, `mission_id`, `tool`, `target_env`, `mission_env`, `ts` all present with correct values
 - [ ] T021 [US1] [P] In `tests/unit/test_mission_isolation.py` — benchmark test: `MissionIsolationPlugin.before_tool_callback` completes in <50ms over 1000 iterations (SC-004, `time.perf_counter()`)
 - [ ] T022 [US1] [P] In `tests/unit/test_plugins.py` — test: `PluginChain` calls `before_tool_callback` on all registered plugins in order; assert `MissionIsolationPlugin` is invoked between `AuditPlugin` and `AutonomyPlugin`
@@ -67,7 +67,7 @@
 - [ ] T025 [US2] In `core/mission.py` — define `MissionStatus` enum: `OPEN`, `CLOSED`, `PARTIAL`
 - [ ] T026 [US2] In `core/mission.py` — define `MissionContext` Pydantic v2 model with all FR-001 fields: `mission_id: str`, `tenant: str`, `env: str`, `cluster: str`, `type: MissionType`, `subject: str`, `status: MissionStatus`, `trigger_id: UUID | None`, `autonomy_level: str`, `created_at: datetime`; add `@field_validator('subject')` enforcing regex `^[a-z0-9]+(-[a-z0-9]+)*$` and max 30 chars (FR-002, SC-005)
 - [ ] T027 [US2] In `core/mission.py` — implement `generate_mission_id(tenant: str, env: str, type: MissionType, subject: str, date: date, db_conn) -> str`: issues `INSERT INTO missions_seq (...) VALUES (...) ON CONFLICT DO UPDATE ... RETURNING seq` (or equivalent `SELECT ... FOR UPDATE` pattern) for atomic counter; formats result as `{TENANT}-{ENV}-{TYPE}-{SUBJECT}-{YYYYMMDD}-{SEQ:03d}` (FR-002, FR-008)
-- [ ] T028 [US2] [P] Write `tests/unit/test_mission.py` — test: `generate_mission_id` returns correctly formatted string `CARREFOUR-PREPROD-INCIDENT-PVC-SATURATION-20260510-001` for first call
+- [ ] T028 [US2] [P] Write `tests/unit/test_mission.py` — test: `generate_mission_id` returns correctly formatted string `ENTERPRISE-PREPROD-INCIDENT-PVC-SATURATION-20260510-001` for first call
 - [ ] T029 [US2] [P] In `tests/unit/test_mission.py` — test: second call with identical parameters on same date returns `...-002` (sequential counter increments, SC-003 single-thread)
 - [ ] T030 [US2] [P] In `tests/unit/test_mission.py` — test: SEQ zero-padding — counter 1 → `001`, counter 9 → `009`, counter 10 → `010` (format `{SEQ:03d}`)
 - [ ] T031 [US2] [P] In `tests/unit/test_mission.py` — test: `MissionContext` rejects subject `"PVC Saturation"` (space → uppercase violation) with `ValidationError` (SC-005)
@@ -90,12 +90,12 @@
 - [ ] T041 [US3] In `core/tenant.py` — implement `load_tenants_dir(dir: Path) -> dict[str, TenantConfig]`: globs `*.yaml` in `dir`, calls `load_tenant()` for each, returns dict keyed by tenant name
 - [ ] T042 [US3] In `core/tenant.py` — implement `TenantRegistry` singleton: holds `_configs: dict[str, TenantConfig]` under `threading.Lock`; exposes `get(tenant: str) -> TenantConfig`, `reload(dir: Path) -> dict[str, list[str]]` (atomically swaps configs under lock, returns `{tenant: [env_names]}` summary); raises `ValueError` on validation failure without modifying active config (FR-005, FR-006)
 - [ ] T043 [US3] Write `api/routes/admin.py` — FastAPI router; implement `POST /admin/reload-tenants` endpoint: calls `TenantRegistry.reload(dir)`; on success returns HTTP 200 with `{"loaded": [...], "envs": {...}}`; on `ValidationError` or `ValueError` returns HTTP 400 with `{"errors": [...]}` without touching active config (FR-005, FR-006)
-- [ ] T044 [US3] [P] Write `tests/unit/test_tenant.py` — test: `load_tenant()` from valid `carrefour.yaml` returns `TenantConfig` with `tenant="carrefour"` and `envs` containing `preprod`
+- [ ] T044 [US3] [P] Write `tests/unit/test_tenant.py` — test: `load_tenant()` from valid `enterprise.yaml` returns `TenantConfig` with `tenant="enterprise"` and `envs` containing `preprod`
 - [ ] T045 [US3] [P] In `tests/unit/test_tenant.py` — test: `load_tenant()` from YAML missing required `prom_url` raises Pydantic `ValidationError`
 - [ ] T046 [US3] [P] In `tests/unit/test_tenant.py` — test: `load_tenant()` from YAML missing required `clusters` raises Pydantic `ValidationError`
 - [ ] T047 [US3] [P] In `tests/unit/test_tenant.py` — test: `TenantConfig` with `vault_path=None` (optional field) is valid — no `ValidationError`
 - [ ] T048 [US3] [P] In `tests/unit/test_tenant.py` — test: multi-env YAML with 3 envs (`preprod`, `prod`, `rec`) parses all 3 `EnvConfig` entries correctly
-- [ ] T049 [US3] Write `tests/integration/test_tenant_reload.py` — test: `POST /admin/reload-tenants` with valid YAML containing new env `rec` returns HTTP 200; assert `TenantRegistry.get("carrefour").envs` contains `rec` immediately after (SC-002)
+- [ ] T049 [US3] Write `tests/integration/test_tenant_reload.py` — test: `POST /admin/reload-tenants` with valid YAML containing new env `rec` returns HTTP 200; assert `TenantRegistry.get("enterprise").envs` contains `rec` immediately after (SC-002)
 - [ ] T050 [US3] [P] In `tests/integration/test_tenant_reload.py` — test: `POST /admin/reload-tenants` with invalid YAML (missing `prom_url`) returns HTTP 400; assert previous config is unchanged (FR-006)
 - [ ] T051 [US3] [P] In `tests/integration/test_tenant_reload.py` — test: after reload adding env `rec`, a mission with `env=rec` calling a preprod `prom_url` is blocked by `MissionIsolationPlugin` (end-to-end US3 scenario 2)
 

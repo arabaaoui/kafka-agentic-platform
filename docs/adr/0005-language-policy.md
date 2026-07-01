@@ -2,13 +2,13 @@
 
 **Statut** : Accepté  
 **Date** : 2026-05-18  
-**Auteur** : abdelhak_rabaaoui
+**Auteur** : infra-ops
 
 ---
 
 ## Contexte
 
-La plateforme est déployée en interne chez Carrefour France. Les équipes SRE/InfraOps qui consomment les sorties (`audit.md`, `BRIEF.md`, rapports d'agents, cartes KB) sont francophones. Les analyses produites initialement en anglais créaient une friction inutile à la lecture.
+La plateforme est déployée en interne. Les équipes SRE/InfraOps qui consomment les sorties (`audit.md`, `BRIEF.md`, rapports d'agents, cartes KB) sont francophones. Les analyses produites initialement en anglais créaient une friction inutile à la lecture.
 
 Contrainte : les modèles LLM (Gemini 2.5) produisent un raisonnement de meilleure qualité en anglais sur les arbres de décision techniques (URP/ISR/lag/PVC). Forcer le français sur l'ensemble du traitement dégraderait la précision des diagnostics.
 
@@ -32,7 +32,7 @@ Les templates des sections de sortie dans les SKILL.md sont rédigés en frança
 ## Conséquences
 
 ### Positives
-- Sorties lisibles nativement pour les équipes Carrefour
+- Sorties lisibles nativement pour les équipes opérationnelles
 - Qualité d'analyse préservée (raisonnement EN)
 - Rollback immédiat possible (`PLATFORM_LANG=en` ou supprimer la variable)
 - Toggle utilisable pour A/B testing qualité

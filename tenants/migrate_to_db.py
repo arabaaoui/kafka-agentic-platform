@@ -11,7 +11,7 @@ from sqlalchemy.ext.asyncio import create_async_engine
 DATABASE_URL = os.getenv("DATABASE_URL", "postgresql+asyncpg://platform:platform@platform-postgres:5432/platform")
 
 async def migrate_to_db():
-    yaml_path = Path("/app/tenants/carrefour.yaml")
+    yaml_path = Path("/app/tenants/enterprise.yaml")
     if not yaml_path.exists():
         print("YAML not found")
         return
@@ -32,7 +32,7 @@ async def migrate_to_db():
             
             # Check if exists
             res = await conn.execute(
-                text("SELECT id FROM infrastructure_envs WHERE tenant = 'carrefour' AND slug = :slug"),
+                text("SELECT id FROM infrastructure_envs WHERE tenant = 'enterprise' AND slug = :slug"),
                 {"slug": slug}
             )
             row = res.fetchone()
@@ -55,7 +55,7 @@ async def migrate_to_db():
                         created_at, updated_at
                     )
                     VALUES (
-                        :id, 'carrefour', :slug, :dn, :bc, :cl, 
+                        :id, 'enterprise', :slug, :dn, :bc, :cl, 
                         :kc_path, :kc, :ns, :pu, :vu, 
                         :kctx, :am_url, :prx_url, :prx_user, :prx_pass,
                         :now, :now

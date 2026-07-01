@@ -13,7 +13,7 @@ mrcl-button {
   --font-mono: ui-monospace, "Cascadia Code", "Source Code Pro", Menlo, monospace;
   --font-sans: var(--mrcl-font-family-default), ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   
-  /* Carrefour Branded Colors */
+  /* Enterprise Branded Colors */
   --crf-blue: #003087;
   --crf-blue-light: #0056b3;
   --crf-red: #ed1c24;

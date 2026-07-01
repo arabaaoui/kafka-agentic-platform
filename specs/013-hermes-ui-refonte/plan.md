@@ -33,7 +33,7 @@ Transformer le frontend `web/` (Next.js 14 + Marcel design system) en s'inspiran
 | §IV Eval suite | ✅ | Aucun nouvel agent ni tool — pas de nouveau eval case requis |
 | §V Zero secret leakage | ✅ | Pas de nouveau logging de secrets |
 | §VI Skills = SKILL.md | ✅ | Catalogue agents lit `agents/*/SKILL.md` — source de vérité respectée |
-| §VII Agnostic by design | ✅ | Aucun hardcode Carrefour dans `core/` ou `agents/` |
+| §VII Agnostic by design | ✅ | Aucun hardcode Enterprise dans `core/` ou `agents/` |
 | §VIII Incident filters = Postgres | ✅ | Non affecté |
 
 ---

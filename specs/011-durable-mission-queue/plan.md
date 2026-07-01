@@ -29,7 +29,7 @@ Replace the in-memory `asyncio.Queue()` mission dispatch with a PostgreSQL-backe
 | IV. Eval Suite ≥80% | ✅ PASS | No agent/tool behavior change; eval cases not affected |
 | V. Zero Secret Leakage | ✅ PASS | No new audit artifacts; `last_error` field must redact kubeconfig/token content |
 | VI. Skills = SKILL.md | ✅ PASS | No SKILL.md changes |
-| VII. Agnostic by Design | ✅ PASS | No Carrefour-specific values in core/api/agents |
+| VII. Agnostic by Design | ✅ PASS | No Enterprise-specific values in core/api/agents |
 | VIII. Filter rules = Postgres | ✅ PASS | `filter_rules` table untouched |
 
 **Gate result: ALL PASS** — proceed to Phase 0.

@@ -19,8 +19,8 @@ from core.tenant import EnvConfig, TenantConfig
 @pytest.fixture()
 def preprod_mission() -> MissionContext:
     return MissionContext(
-        mission_id="CARREFOUR-PREPROD-INCIDENT-PVC-SATURATION-20260510-001",
-        tenant="carrefour",
+        mission_id="ENTERPRISE-PREPROD-INCIDENT-PVC-SATURATION-20260510-001",
+        tenant="enterprise",
         env="preprod",
         cluster="kafka-preprod",
         type=MissionType.INCIDENT,
@@ -31,8 +31,8 @@ def preprod_mission() -> MissionContext:
 @pytest.fixture()
 def prod_mission() -> MissionContext:
     return MissionContext(
-        mission_id="CARREFOUR-PROD-INCIDENT-LAG-URP-20260510-001",
-        tenant="carrefour",
+        mission_id="ENTERPRISE-PROD-INCIDENT-LAG-URP-20260510-001",
+        tenant="enterprise",
         env="prod",
         cluster="kafkahub-prod",
         type=MissionType.INCIDENT,
@@ -46,7 +46,7 @@ def prod_mission() -> MissionContext:
 @pytest.fixture()
 def tenant_config() -> TenantConfig:
     return TenantConfig(
-        tenant="carrefour",
+        tenant="enterprise",
         envs={
             "preprod": EnvConfig(
                 clusters=["kafka-preprod", "kafka-v1-preprod"],
@@ -66,9 +66,9 @@ def tenant_config() -> TenantConfig:
 
 @pytest.fixture()
 def tenant_yaml(tmp_path) -> Path:
-    """Write carrefour.yaml to a temp dir and return the dir path."""
+    """Write enterprise.yaml to a temp dir and return the dir path."""
     content = textwrap.dedent("""\
-        tenant: carrefour
+        tenant: enterprise
         envs:
           preprod:
             clusters: [kafka-preprod]
@@ -79,7 +79,7 @@ def tenant_yaml(tmp_path) -> Path:
             kubeconfig: /kube/prod
             prom_url: https://prom.prod.example.com
     """)
-    (tmp_path / "carrefour.yaml").write_text(content)
+    (tmp_path / "enterprise.yaml").write_text(content)
     return tmp_path
 
 

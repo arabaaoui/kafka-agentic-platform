@@ -5,7 +5,7 @@
 
 ## Summary
 
-Integrate Carrefour's "Marcel Web Renew" design system into the Next.js 14 (App Router) frontend of the Kafka Agentic Platform. This includes installing the official `@marcel/*` scoped packages from the Carrefour registry, configuring global typography and styles using `@marcel/web-tokens` CSS variables, creating a client-side hydrator `MarcelProvider` to register the custom elements, and refactoring the Sidebar and Dashboard pages to employ Marcel web components.
+Integrate Enterprise's "Marcel Web Renew" design system into the Next.js 14 (App Router) frontend of the Kafka Agentic Platform. This includes installing the official `@marcel/*` scoped packages from the Enterprise registry, configuring global typography and styles using `@marcel/web-tokens` CSS variables, creating a client-side hydrator `MarcelProvider` to register the custom elements, and refactoring the Sidebar and Dashboard pages to employ Marcel web components.
 
 ## Technical Context
 
@@ -27,7 +27,7 @@ Integrate Carrefour's "Marcel Web Renew" design system into the Next.js 14 (App 
 | IV. Eval Suite ≥80% | ✅ PASS | Backend evaluation unaffected |
 | V. Zero Secret Leakage | ✅ PASS | No credentials committed in frontend changes |
 | VI. Skills = SKILL.md | ✅ PASS | Handled strictly under local codebase and Marcel AI skills parameters |
-| VII. Agnostic by Design | ✅ PASS | The frontend uses Carrefour's brand design system natively as instructed |
+| VII. Agnostic by Design | ✅ PASS | The frontend uses Enterprise's brand design system natively as instructed |
 
 **Gate result: ALL PASS** — proceed to Phase 0.
 
@@ -46,7 +46,7 @@ specs/012-marcel-frontend-integration/
 
 ```text
 web/
-├── .npmrc               # NEW: redirect @marcel registry to Carrefour repo
+├── .npmrc               # NEW: redirect @marcel registry to Enterprise repo
 ├── marcel.d.ts          # NEW: global TypeScript JSX types import
 ├── package.json         # MODIFIED: add @marcel/* dependencies
 ├── app/
@@ -61,9 +61,9 @@ web/
 ## Key Integration Patterns
 
 ### 1. Registry Redirection (`.npmrc`)
-To resolve packages from `@marcel/*`, we will create `/web/.npmrc` pointing to Carrefour's general Artifactory server:
+To resolve packages from `@marcel/*`, we will create `/web/.npmrc` pointing to Enterprise's general Artifactory server:
 ```ini
-@marcel:registry=https://enterpriserepo.fr.carrefour.com/artifactory/api/npm/chapter-front-components-npm-releases-local/
+@marcel:registry=https://enterpriserepo.fr.enterprise.com/artifactory/api/npm/chapter-front-components-npm-releases-local/
 always-auth=true
 ```
 

@@ -10,7 +10,7 @@
 ```json
 {
   "status": "ok",
-  "tenants": ["carrefour"],
+  "tenants": ["enterprise"],
   "worker_count": 2,
   "queue_depth": 5,
   "oldest_pending_age_seconds": 45.2
@@ -21,7 +21,7 @@
 ```json
 {
   "status": "ok",
-  "tenants": ["carrefour"],
+  "tenants": ["enterprise"],
   "worker_count": 2,
   "queue_depth": 5,
   "oldest_pending_age_seconds": 45.2,
@@ -47,7 +47,7 @@
   "en_attente": [
     {
       "id": "uuid",
-      "tenant": "carrefour",
+      "tenant": "enterprise",
       "source": "alertmanager",
       "external_id": "alert-123",
       "received_at": "2026-06-15T10:00:00Z",
@@ -62,7 +62,7 @@
   "terminee": [
     {
       "mission_id": "MSN-2026-001",
-      "tenant": "carrefour",
+      "tenant": "enterprise",
       "env": "PROD",
       "subject": "pvc-saturation",
       "status": "CLOSED",
@@ -135,7 +135,7 @@ ORDER BY received_at ASC LIMIT 50;
 ```json
 {
   "id": "uuid",
-  "tenant": "carrefour",
+  "tenant": "enterprise",
   "source": "alertmanager",
   "status": "retried"
 }

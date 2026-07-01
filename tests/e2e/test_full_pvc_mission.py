@@ -46,7 +46,7 @@ PHX_99999 = {
         "status": {"name": "Open"},
         "issuetype": {"name": "Incident"},
         "project": {"key": "PHX"},
-        "assignee": {"name": "arabaaoui"},
+        "assignee": {"name": "ops-user"},
         "labels": ["env:preprod", "kafka", "pvc"],
         "customfield_10200": "preprod",
     },
@@ -69,7 +69,7 @@ MOCK_EXPERT_OUTPUT = textwrap.dedent("""
 """).strip()
 
 MOCK_CONSOLIDATED_AUDIT = textwrap.dedent("""
-    # Consolidated Audit — CARREFOUR-PREPROD-INCIDENT-PVC-SATURATION-20260510-001
+    # Consolidated Audit — ENTERPRISE-PREPROD-INCIDENT-PVC-SATURATION-20260510-001
 
     ## Hypotheses
     - Root cause: PVC saturation at 91% on kafka-data-0
@@ -90,7 +90,7 @@ MOCK_CONSOLIDATED_AUDIT = textwrap.dedent("""
 @pytest.fixture()
 def tenants_dir(tmp_path) -> Path:
     content = textwrap.dedent("""\
-        tenant: carrefour
+        tenant: enterprise
         envs:
           preprod:
             clusters: [kafka-preprod, kafkahub-preprod]
@@ -103,7 +103,7 @@ def tenants_dir(tmp_path) -> Path:
             prom_url: https://prom.prod.example.com
             vm_url: https://vm.prod.example.com
     """)
-    (tmp_path / "carrefour.yaml").write_text(content)
+    (tmp_path / "enterprise.yaml").write_text(content)
     return tmp_path
 
 
@@ -140,8 +140,8 @@ def client(test_app) -> TestClient:
 
 
 def _mission_id_from_env_subject(env: str, subject: str) -> str:
-    """Build the canonical MISSION_ID for carrefour / incident on 20260510."""
-    return f"CARREFOUR-{env.upper()}-INCIDENT-{subject.upper()}-20260510-001"
+    """Build the canonical MISSION_ID for enterprise / incident on 20260510."""
+    return f"ENTERPRISE-{env.upper()}-INCIDENT-{subject.upper()}-20260510-001"
 
 
 # ── Test: app healthz ─────────────────────────────────────────────────────────
@@ -152,7 +152,7 @@ def test_healthz(client):
     assert resp.status_code == 200
     data = resp.json()
     assert data["status"] == "ok"
-    assert "carrefour" in data["tenants"]
+    assert "enterprise" in data["tenants"]
 
 
 # ── Test: mission injection via queue and pipeline ────────────────────────────
@@ -166,11 +166,11 @@ async def test_mission_created_with_correct_id_format(tenants_dir, tmp_path, mon
     from core.tenant import TenantRegistry
     TenantRegistry.init(str(tenants_dir))
 
-    mission_id = "CARREFOUR-PREPROD-INCIDENT-PVC-SATURATION-20260510-001"
+    mission_id = "ENTERPRISE-PREPROD-INCIDENT-PVC-SATURATION-20260510-001"
 
     ctx = MissionContext(
         mission_id=mission_id,
-        tenant="carrefour",
+        tenant="enterprise",
         env="preprod",
         cluster="kafka-preprod",
         type=MissionType.INCIDENT,
@@ -186,8 +186,8 @@ async def test_mission_created_with_correct_id_format(tenants_dir, tmp_path, mon
 def test_mission_id_regex_matches_canonical_format():
     """MISSION_ID regex covers all expected patterns."""
     valid_ids = [
-        "CARREFOUR-PREPROD-INCIDENT-PVC-SATURATION-20260510-001",
-        "CARREFOUR-PROD-INCIDENT-BROKER-DOWN-20260101-042",
+        "ENTERPRISE-PREPROD-INCIDENT-PVC-SATURATION-20260510-001",
+        "ENTERPRISE-PROD-INCIDENT-BROKER-DOWN-20260101-042",
         "TESTCO-PREPROD-REVIEW-CERT-EXPIRY-20260315-007",
     ]
     for mid in valid_ids:
@@ -200,8 +200,8 @@ def test_mission_id_regex_matches_canonical_format():
 def test_mission_env_is_preprod():
     """Mission created from PHX-99999 has env=PREPROD."""
     ctx = MissionContext(
-        mission_id="CARREFOUR-PREPROD-INCIDENT-PVC-SATURATION-20260510-001",
-        tenant="carrefour",
+        mission_id="ENTERPRISE-PREPROD-INCIDENT-PVC-SATURATION-20260510-001",
+        tenant="enterprise",
         env="preprod",
         cluster="kafka-preprod",
         type=MissionType.INCIDENT,
@@ -213,8 +213,8 @@ def test_mission_env_is_preprod():
 def test_mission_subject_is_kebab_case():
     """Mission subject is kebab-case 'pvc-saturation'."""
     ctx = MissionContext(
-        mission_id="CARREFOUR-PREPROD-INCIDENT-PVC-SATURATION-20260510-001",
-        tenant="carrefour",
+        mission_id="ENTERPRISE-PREPROD-INCIDENT-PVC-SATURATION-20260510-001",
+        tenant="enterprise",
         env="preprod",
         cluster="kafka-preprod",
         type=MissionType.INCIDENT,
@@ -245,7 +245,7 @@ def test_post_to_jira_not_automatic(client):
     """POST /v1/missions/{id}/post-to-jira returns 404 (mission not in DB in this test)."""
     # In v0, Post-to-Jira is not implemented automatically — endpoint returns 501
     # when called explicitly, and is never called automatically by the pipeline.
-    mission_id = "CARREFOUR-PREPROD-INCIDENT-PVC-SATURATION-20260510-001"
+    mission_id = "ENTERPRISE-PREPROD-INCIDENT-PVC-SATURATION-20260510-001"
     resp = client.post(f"/v1/missions/{mission_id}/post-to-jira")
     # Either 404 (mission not in DB) or 501 (not implemented) — both indicate no auto-post
     assert resp.status_code in (404, 501)
@@ -267,7 +267,7 @@ def test_cross_env_block_logged_in_audit(tmp_path):
     from core.tenant import EnvConfig, TenantConfig
 
     tenant_cfg = TenantConfig(
-        tenant="carrefour",
+        tenant="enterprise",
         envs={
             "preprod": EnvConfig(
                 clusters=["kafka-preprod"],
@@ -304,10 +304,10 @@ async def test_three_agent_outputs_produced(tmp_path, monkeypatch, tenants_dir):
     from core.tenant import TenantRegistry
     TenantRegistry.init(str(tenants_dir))
 
-    mission_id = "CARREFOUR-PREPROD-INCIDENT-PVC-SATURATION-20260510-001"
+    mission_id = "ENTERPRISE-PREPROD-INCIDENT-PVC-SATURATION-20260510-001"
     ctx = MissionContext(
         mission_id=mission_id,
-        tenant="carrefour",
+        tenant="enterprise",
         env="preprod",
         cluster="kafka-preprod",
         type=MissionType.INCIDENT,

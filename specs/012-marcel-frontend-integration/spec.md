@@ -3,22 +3,22 @@
 **Feature Branch**: `012-marcel-frontend-integration`  
 **Created**: 2026-06-12  
 **Status**: Draft  
-**Input**: User description: "Integrate Carrefour's Marcel Web Renew Design System into the Next.js frontend of the Kafka Agentic Platform."
+**Input**: User description: "Integrate Enterprise's Marcel Web Renew Design System into the Next.js frontend of the Kafka Agentic Platform."
 
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Brand Theme & Token Integration (Priority: P1)
 
-Integrate the official `@marcel/web-tokens` styling library into the global Next.js CSS layout to apply Carrefour's colors, spacings, and typographies globally.
+Integrate the official `@marcel/web-tokens` styling library into the global Next.js CSS layout to apply Enterprise's colors, spacings, and typographies globally.
 
 **Why this priority**: It is the foundation of the brand integration. All components and styling depend on these tokens and fonts.
 
-**Independent Test**: Start the frontend development server and verify that the page background, general spacing, and typography inherit from Carrefour's custom CSS custom properties (like `--mrcl-font-family-default`).
+**Independent Test**: Start the frontend development server and verify that the page background, general spacing, and typography inherit from Enterprise's custom CSS custom properties (like `--mrcl-font-family-default`).
 
 **Acceptance Scenarios**:
 
 1. **Given** the frontend dev server is running, **When** loading the root layout, **Then** the global font bunny `Ubuntu` is requested and applied globally.
-2. **Given** custom styles are loaded, **When** using token variables (e.g. `var(--mrcl-color-background-primary-dark)`), **Then** they correctly resolve to Carrefour's brand color hex codes.
+2. **Given** custom styles are loaded, **When** using token variables (e.g. `var(--mrcl-color-background-primary-dark)`), **Then** they correctly resolve to Enterprise's brand color hex codes.
 
 ---
 
@@ -96,5 +96,5 @@ Replace the standard HTML form elements (like selects and text inputs in setting
 
 ## Assumptions
 
-- **Local Registry Access**: The developer machine is properly authenticated to the Carrefour Artifactory npm registry to fetch `@marcel` scoped packages.
+- **Local Registry Access**: The developer machine is properly authenticated to the Enterprise Artifactory npm registry to fetch `@marcel` scoped packages.
 - **Theme Compatibility**: Since the platform currently uses a dark layout (`className="dark" bg-slate-950`), Marcel's tokens are assumed to provide compatible dark-mode values or base themes.

@@ -10,7 +10,7 @@ import pytest
 
 @pytest.fixture
 def closed_mission_id():
-    return "CARREFOUR-PREPROD-INCIDENT-PVC-SATURATION-20260511-001"
+    return "ENTERPRISE-PREPROD-INCIDENT-PVC-SATURATION-20260511-001"
 
 
 @pytest.fixture
@@ -36,8 +36,8 @@ def audit_md(closed_mission_id, tmp_path):
 
 
 class _FakeResult:
-    mission_id = "CARREFOUR-PREPROD-INCIDENT-PVC-SATURATION-20260511-001"
-    brief_path = "audits/CARREFOUR-PREPROD-INCIDENT-PVC-SATURATION-20260511-001/BRIEF.md"
+    mission_id = "ENTERPRISE-PREPROD-INCIDENT-PVC-SATURATION-20260511-001"
+    brief_path = "audits/ENTERPRISE-PREPROD-INCIDENT-PVC-SATURATION-20260511-001/BRIEF.md"
     kb_card_slug = "pvc-saturation-v2"
     kb_card_action = "created"
     kb_index_card_count = 18
@@ -58,7 +58,7 @@ async def test_finalize_returns_result_on_closed_mission(closed_mission_id, audi
         mock_mission = MagicMock()
         mock_mission.status = "CLOSED"
         mock_mission.mission_id = closed_mission_id
-        mock_mission.tenant = "carrefour"
+        mock_mission.tenant = "enterprise"
         mock_mission.env = "PREPROD"
         mock_mission.cluster = "kafka-preprod"
         mock_mission.type = "INCIDENT"

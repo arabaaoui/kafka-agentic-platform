@@ -22,7 +22,7 @@ from core.tenant import EnvConfig, TenantConfig
 # ── Fixtures ──────────────────────────────────────────────────────────────────
 
 
-MISSION_ID = "CARREFOUR-PREPROD-INCIDENT-PVC-SATURATION-20260510-001"
+MISSION_ID = "ENTERPRISE-PREPROD-INCIDENT-PVC-SATURATION-20260510-001"
 
 FIXTURE_MARKDOWN = """
 # Kafka Strimzi Expert Analysis
@@ -45,7 +45,7 @@ FIXTURE_MARKDOWN = """
 def preprod_mission() -> MissionContext:
     return MissionContext(
         mission_id=MISSION_ID,
-        tenant="carrefour",
+        tenant="enterprise",
         env="preprod",
         cluster="kafka-preprod",
         type=MissionType.INCIDENT,
@@ -56,7 +56,7 @@ def preprod_mission() -> MissionContext:
 @pytest.fixture()
 def tenant_cfg() -> TenantConfig:
     return TenantConfig(
-        tenant="carrefour",
+        tenant="enterprise",
         envs={
             "preprod": EnvConfig(
                 clusters=["kafka-preprod"],
@@ -141,7 +141,7 @@ async def test_all_three_experts_called_with_same_mission_context(
             "agents.pipeline.orchestrator.IntakeAgent",
             return_value=MagicMock(classify=AsyncMock(return_value={
                 "rejected": False,
-                "tenant": "carrefour",
+                "tenant": "enterprise",
                 "env": "PREPROD",
                 "cluster": "kafka-preprod",
                 "type": MissionType.INCIDENT,
@@ -215,7 +215,7 @@ async def test_agents_invoked_sequentially_by_default(preprod_mission, tenant_cf
             "agents.pipeline.orchestrator.IntakeAgent",
             return_value=MagicMock(classify=AsyncMock(return_value={
                 "rejected": False,
-                "tenant": "carrefour",
+                "tenant": "enterprise",
                 "env": "PREPROD",
                 "cluster": "kafka-preprod",
                 "type": MissionType.INCIDENT,
@@ -276,7 +276,7 @@ async def test_evidence_consolidator_called_after_all_experts(preprod_mission, t
             "agents.pipeline.orchestrator.IntakeAgent",
             return_value=MagicMock(classify=AsyncMock(return_value={
                 "rejected": False,
-                "tenant": "carrefour",
+                "tenant": "enterprise",
                 "env": "PREPROD",
                 "cluster": "kafka-preprod",
                 "type": MissionType.INCIDENT,
@@ -347,7 +347,7 @@ async def test_partial_failure_one_expert_continues_with_two_outputs(
             "agents.pipeline.orchestrator.IntakeAgent",
             return_value=MagicMock(classify=AsyncMock(return_value={
                 "rejected": False,
-                "tenant": "carrefour",
+                "tenant": "enterprise",
                 "env": "PREPROD",
                 "cluster": "kafka-preprod",
                 "type": MissionType.INCIDENT,

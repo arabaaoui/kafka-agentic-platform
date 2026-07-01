@@ -31,7 +31,7 @@ curl -s http://localhost:8000/healthz | python -m json.tool
 # 1. Insert a matched trigger directly into DB
 psql $DATABASE_URL -c "
 INSERT INTO triggers (id, tenant, source, external_id, payload, matched, received_at)
-VALUES (gen_random_uuid(), 'carrefour', 'test', 'test-restart-001',
+VALUES (gen_random_uuid(), 'enterprise', 'test', 'test-restart-001',
         '{\"labels\":{\"alertname\":\"KafkaBrokerDown\"}}'::jsonb, true, now())
 ON CONFLICT DO NOTHING;
 "
@@ -66,7 +66,7 @@ PID=$!
 # Insert a trigger
 psql $DATABASE_URL -c "
 INSERT INTO triggers (id, tenant, source, external_id, payload, matched, received_at)
-VALUES (gen_random_uuid(), 'carrefour', 'test', 'test-lease-001',
+VALUES (gen_random_uuid(), 'enterprise', 'test', 'test-lease-001',
         '{\"labels\":{\"alertname\":\"KafkaBrokerDown\"}}'::jsonb, true, now())
 ON CONFLICT DO NOTHING;
 "

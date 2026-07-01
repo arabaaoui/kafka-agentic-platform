@@ -28,8 +28,8 @@ RUN echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.
     && apt-get update && apt-get install -y google-cloud-sdk google-cloud-sdk-gke-gcloud-auth-plugin \
     && rm -rf /var/lib/apt/lists/*
 
-# ── Setup CA Certificates for Carrefour Proxy (Early build step) ──────────────
-COPY ca-cert.pem /usr/local/share/ca-certificates/carrefour.crt
+# ── Setup CA Certificates for Enterprise Proxy (Early build step) ──────────────
+COPY ca-cert.pem /usr/local/share/ca-certificates/enterprise-ca.crt
 RUN update-ca-certificates
 ENV SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt
 ENV REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt

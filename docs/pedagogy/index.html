@@ -646,7 +646,7 @@ td .method { font-family: var(--mono); font-size: 11px; font-weight: 700; paddin
 <span style="color:var(--text2)">│       └──</span> <span style="color:var(--text2)">… (slug.md par pattern d'incident)</span>
 <span style="color:var(--text2)">│</span>
 <span style="color:var(--text2)">├──</span> <span style="color:var(--blue);font-weight:600;">tenants/</span>                         <span style="color:var(--text2)">← Configs multi-tenant (YAML)</span>
-<span style="color:var(--text2)">│   ├──</span> <span style="color:var(--text)">carrefour.yaml</span>                 <span style="color:var(--text2)">← config tenant principal (lab/preprod/prod)</span>
+<span style="color:var(--text2)">│   ├──</span> <span style="color:var(--text)">enterprise.yaml</span>                 <span style="color:var(--text2)">← config tenant principal (lab/preprod/prod)</span>
 <span style="color:var(--text2)">│   ├──</span> <span style="color:var(--text)">migrate_to_db.py</span>               <span style="color:var(--text2)">← helper migration YAML → DB</span>
 <span style="color:var(--text2)">│   └──</span> <span style="color:var(--text)">import_real_kubeconfigs.py</span>     <span style="color:var(--text2)">← import kubeconfigs dans InfrastructureEnv</span>
 <span style="color:var(--text2)">│</span>
@@ -1025,7 +1025,7 @@ td .method { font-family: var(--mono); font-size: 11px; font-weight: 700; paddin
   <div class="svg-wrap">
     <svg viewBox="0 0 820 160" width="820" xmlns="http://www.w3.org/2000/svg" style="font-family:ui-monospace,'Cascadia Mono',Menlo,Consolas,monospace; font-size:13px;">
       <rect x="10" y="40" width="800" height="44" rx="8" fill="#1c2128" stroke="#30363d" stroke-width="1.5"/>
-      <text x="410" y="68" text-anchor="middle" fill="#e6edf3" font-size="14" font-weight="600">CARREFOUR-PREPROD-INCIDENT-PVC-SATURATION-20260520-001</text>
+      <text x="410" y="68" text-anchor="middle" fill="#e6edf3" font-size="14" font-weight="600">ENTERPRISE-PREPROD-INCIDENT-PVC-SATURATION-20260520-001</text>
       <!-- underlines -->
       <rect x="14" y="80" width="126" height="3" rx="1" fill="#58a6ff"/>
       <text x="77" y="104" text-anchor="middle" fill="#58a6ff" font-size="11" font-weight="600">TENANT</text>
@@ -1078,7 +1078,7 @@ td .method { font-family: var(--mono); font-size: 11px; font-weight: 700; paddin
     <table>
       <thead><tr><th>Champ</th><th>Type</th><th>Source</th><th>Rôle</th></tr></thead>
       <tbody>
-        <tr><td><code>tenant</code></td><td>str</td><td>IntakeAgent classify()</td><td>Identifie la configuration tenant (carrefour.yaml)</td></tr>
+        <tr><td><code>tenant</code></td><td>str</td><td>IntakeAgent classify()</td><td>Identifie la configuration tenant (enterprise.yaml)</td></tr>
         <tr><td><code>env</code></td><td>str</td><td>IntakeAgent classify()</td><td>Environnement : lab, preprod, prod</td></tr>
         <tr><td><code>cluster</code></td><td>str</td><td>IntakeAgent classify()</td><td>Nom du cluster Kafka cible</td></tr>
         <tr><td><code>type</code></td><td>MissionType</td><td>IntakeAgent classify()</td><td>Nature de la mission</td></tr>
@@ -1504,7 +1504,7 @@ UPDATE triggers SET last_error='DEAD:...', processed_at=now() WHERE id=:id</code
       <div class="step-body">
         <h4>EnvConfig résolution — DB first, YAML fallback</h4>
         <p>L'orchestrateur cherche d'abord dans <code>infrastructure_envs</code> (source de vérité pour les envs dynamiques).
-        Si absent, il fallback sur le registry YAML (<code>tenants/carrefour.yaml</code>).
+        Si absent, il fallback sur le registry YAML (<code>tenants/enterprise.yaml</code>).
         Crée une <code>EnvConfig</code> isolée pour cette mission (deep copy) afin que les modifications
         runtime (kubeconfig path, token) n'affectent pas les autres missions concurrentes.</p>
       </div>
@@ -1648,8 +1648,8 @@ runner = <span style="color:var(--yellow)">Runner</span>(
     <table>
       <thead><tr><th>Variable</th><th>Valeur injectée</th></tr></thead>
       <tbody>
-        <tr><td><code>{MISSION_ID}</code></td><td>ex: <code>CARREFOUR-PREPROD-INCIDENT-PVC-SATURATION-20260520-001</code></td></tr>
-        <tr><td><code>{TENANT}</code></td><td>ex: <code>carrefour</code></td></tr>
+        <tr><td><code>{MISSION_ID}</code></td><td>ex: <code>ENTERPRISE-PREPROD-INCIDENT-PVC-SATURATION-20260520-001</code></td></tr>
+        <tr><td><code>{TENANT}</code></td><td>ex: <code>enterprise</code></td></tr>
         <tr><td><code>{ENV}</code></td><td>ex: <code>preprod</code></td></tr>
         <tr><td><code>{CLUSTER}</code></td><td>ex: <code>kafkahub-preprod</code></td></tr>
         <tr><td><code>{SUBJECT}</code></td><td>ex: <code>pvc-saturation</code></td></tr>
@@ -2640,7 +2640,7 @@ aliases: [kafka-expert, strimzi-expert]
 ---
 
 ## Rôle
-Tu es l'expert Kafka/Strimzi de la plateforme d'incidents Carrefour.
+Tu es l'expert Kafka/Strimzi de la plateforme d'incidents Enterprise.
 Mission : {MISSION_ID} | Env : {ENV} | Cluster : {CLUSTER}
 
 ## Responsabilités
@@ -2754,10 +2754,10 @@ AuditPlugin.after_tool_callback()             <span style="color:var(--text2)">#
 ResiliencePlugin.after_tool_callback()        <span style="color:var(--text2)"># 2. clear retry ctx</span></code></pre>
 
   <h3>Audit JSONL — format d'une ligne</h3>
-  <pre><code><span style="color:var(--text2)"># audits/CARREFOUR-PREPROD-INCIDENT-PVC-SATURATION-20260520-001/audit.kafka_strimzi_expert.jsonl</span>
+  <pre><code><span style="color:var(--text2)"># audits/ENTERPRISE-PREPROD-INCIDENT-PVC-SATURATION-20260520-001/audit.kafka_strimzi_expert.jsonl</span>
 {
   <span style="color:var(--green)">"ts"</span>: <span style="color:var(--green)">"2026-05-20T10:32:14.221Z"</span>,
-  <span style="color:var(--green)">"mission_id"</span>: <span style="color:var(--green)">"CARREFOUR-PREPROD-INCIDENT-PVC-SATURATION-20260520-001"</span>,
+  <span style="color:var(--green)">"mission_id"</span>: <span style="color:var(--green)">"ENTERPRISE-PREPROD-INCIDENT-PVC-SATURATION-20260520-001"</span>,
   <span style="color:var(--green)">"agent"</span>: <span style="color:var(--green)">"kafka_strimzi_expert"</span>,
   <span style="color:var(--green)">"tool"</span>: <span style="color:var(--green)">"pvc_forecast"</span>,
   <span style="color:var(--green)">"args"</span>: { <span style="color:var(--green)">"prom_url"</span>: <span style="color:var(--green)">"***REDACTED***"</span> },
@@ -3339,9 +3339,9 @@ base_model = os.getenv(<span style="color:var(--green)">"GOOGLE_ADK_MODEL"</span
   </p>
 
   <h3>Structure du fichier tenant</h3>
-  <pre><code><span style="color:var(--text2)"># tenants/carrefour.yaml</span>
-tenant: carrefour
-display_name: "Carrefour Kafka Platform"
+  <pre><code><span style="color:var(--text2)"># tenants/enterprise.yaml</span>
+tenant: enterprise
+display_name: "Enterprise Kafka Platform"
 autonomy_level: <span style="color:var(--cyan)">2</span>  <span style="color:var(--text2)"># L2 = read-only + confirmation</span>
 
 envs:
@@ -3375,7 +3375,7 @@ envs:
     (kubeconfigs, tokens, URLs ajoutés via l'UI Admin ou l'API <code>/v1/infrastructure</code>).
   </p>
   <pre><code><span style="color:var(--text2)"># Accès dans le code</span>
-tenant_cfg = TenantRegistry.get(<span style="color:var(--green)">"carrefour"</span>)
+tenant_cfg = TenantRegistry.get(<span style="color:var(--green)">"enterprise"</span>)
 env_cfg = tenant_cfg.envs.get(<span style="color:var(--green)">"preprod"</span>)
 prom_url = env_cfg.prom_url  <span style="color:var(--text2)"># injecté automatiquement dans les tools</span></code></pre>
 
@@ -3721,7 +3721,7 @@ services:
         <tr>
           <td><strong>7. Renseigner target_gsa_email</strong></td>
           <td>Email Target GSA dans la config tenant (YAML ou DB)</td>
-          <td><code>tenants/carrefour.yaml → target_gsa_email: kafka-expert@PROJET_PREPROD.iam…</code></td>
+          <td><code>tenants/enterprise.yaml → target_gsa_email: kafka-expert@PROJET_PREPROD.iam…</code></td>
         </tr>
         <tr>
           <td><strong>8. Fournir kubeconfig_content</strong></td>
@@ -3874,7 +3874,7 @@ subjects:
         <thead><tr><th>Variable</th><th>Obligatoire</th><th>Exemple</th><th>Description</th></tr></thead>
         <tbody>
           <tr><td><code>MCP_C4_ATLASSIAN_URL</code></td><td><span class="badge-inline badge-red">oui (Jira)</span></td><td><code>http://localhost:3010/sse</code></td><td>URL SSE du serveur MCP c4-atlassian. Requis pour le JiraMcpPoller.</td></tr>
-          <tr><td><code>JIRA_BASE_URL</code></td><td><span class="badge-inline badge-red">oui (Jira)</span></td><td><code>https://jira.carrefour.com</code></td><td>URL base Jira pour les liens dans les rapports.</td></tr>
+          <tr><td><code>JIRA_BASE_URL</code></td><td><span class="badge-inline badge-red">oui (Jira)</span></td><td><code>https://jira.enterprise.com</code></td><td>URL base Jira pour les liens dans les rapports.</td></tr>
           <tr><td><code>JIRA_TOKEN</code></td><td><span class="badge-inline badge-red">oui (Jira)</span></td><td><code>PAT-...</code></td><td>Personal Access Token Jira passé au serveur MCP.</td></tr>
         </tbody>
       </table>
@@ -3912,14 +3912,14 @@ subjects:
   </div>
 
   <div class="env-group">
-    <div class="env-group-title">TLS / Certificats (Carrefour corporate)</div>
+    <div class="env-group-title">TLS / Certificats (Enterprise corporate)</div>
     <div class="tbl-wrap">
       <table>
         <thead><tr><th>Variable</th><th>Exemple</th><th>Description</th></tr></thead>
         <tbody>
-          <tr><td><code>SSL_CERT_FILE</code></td><td><code>/etc/ssl/certs/carrefour-ca.pem</code></td><td>CA bundle pour les appels HTTPS internes. Injecté par deploy/entrypoint.sh.</td></tr>
-          <tr><td><code>REQUESTS_CA_BUNDLE</code></td><td><code>/etc/ssl/certs/carrefour-ca.pem</code></td><td>Utilisé par la lib requests/httpx.</td></tr>
-          <tr><td><code>GRPC_DEFAULT_SSL_ROOTS_FILE_PATH</code></td><td><code>/etc/ssl/certs/carrefour-ca.pem</code></td><td>Utilisé par les clients gRPC (Vertex AI).</td></tr>
+          <tr><td><code>SSL_CERT_FILE</code></td><td><code>/etc/ssl/certs/enterprise-ca.pem</code></td><td>CA bundle pour les appels HTTPS internes. Injecté par deploy/entrypoint.sh.</td></tr>
+          <tr><td><code>REQUESTS_CA_BUNDLE</code></td><td><code>/etc/ssl/certs/enterprise-ca.pem</code></td><td>Utilisé par la lib requests/httpx.</td></tr>
+          <tr><td><code>GRPC_DEFAULT_SSL_ROOTS_FILE_PATH</code></td><td><code>/etc/ssl/certs/enterprise-ca.pem</code></td><td>Utilisé par les clients gRPC (Vertex AI).</td></tr>
           <tr><td><code>CLOUDSDK_CONFIG</code></td><td><code>/app/.config/gcloud</code></td><td>Répertoire de configuration gcloud pour ADC.</td></tr>
         </tbody>
       </table>
@@ -4232,7 +4232,7 @@ docker compose -f deploy/docker-compose.yml --profile app --profile lab up -d</c
   <h3>/healthz — réponse enrichie</h3>
   <pre><code>{
   <span style="color:var(--green)">"status"</span>: <span style="color:var(--green)">"ok"</span>,
-  <span style="color:var(--green)">"tenants"</span>: [<span style="color:var(--green)">"carrefour"</span>],
+  <span style="color:var(--green)">"tenants"</span>: [<span style="color:var(--green)">"enterprise"</span>],
   <span style="color:var(--green)">"worker_count"</span>: 3,                    <span style="color:var(--text2)">// workers asyncio actifs non terminés</span>
   <span style="color:var(--green)">"queue_depth"</span>: 7,                     <span style="color:var(--text2)">// triggers pending + inflight</span>
   <span style="color:var(--green)">"oldest_pending_age_seconds"</span>: 42.1   <span style="color:var(--text2)">// âge du plus vieux trigger non traité</span>

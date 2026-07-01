@@ -190,7 +190,7 @@ export function FilterRuleEditor({ rule, onDone }: Props) {
                 value={form.jql}
                 onChange={(e) => set("jql", e.target.value)}
                 rows={3}
-                placeholder="project IN (PKH, PHX) AND assignee = arabaaoui AND status NOT IN ('Closed', 'Resolved')"
+                placeholder="project IN (PKH, PHX) AND assignee = ops-user AND status NOT IN ('Closed', 'Resolved')"
                 className="w-full bg-gray-800 border border-gray-700 rounded px-2 py-1.5 text-xs font-mono text-gray-200 focus:outline-none focus:border-amber-500"
               />
             </div>
@@ -210,7 +210,7 @@ export function FilterRuleEditor({ rule, onDone }: Props) {
                 <input
                   value={form.jql_assignee}
                   onChange={(e) => set("jql_assignee", e.target.value)}
-                  placeholder="arabaaoui"
+                  placeholder="ops-user"
                   className="w-full bg-gray-800 border border-gray-700 rounded px-2 py-1.5 text-xs text-gray-200 focus:outline-none focus:border-amber-500"
                 />
               </div>

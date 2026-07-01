@@ -39,7 +39,7 @@ PROD_PROM = "https://prom.prod.example.com"
 @pytest.fixture()
 def tenant_cfg() -> TenantConfig:
     return TenantConfig(
-        tenant="carrefour",
+        tenant="enterprise",
         envs={
             "preprod": EnvConfig(
                 clusters=["kafka-preprod"],
@@ -58,8 +58,8 @@ def tenant_cfg() -> TenantConfig:
 @pytest.fixture()
 def mission(tenant_cfg) -> MissionContext:
     return MissionContext(
-        mission_id="CARREFOUR-PREPROD-INCIDENT-PVC-SATURATION-20260510-001",
-        tenant="carrefour",
+        mission_id="ENTERPRISE-PREPROD-INCIDENT-PVC-SATURATION-20260510-001",
+        tenant="enterprise",
         env="preprod",
         cluster="kafka-preprod",
         type=MissionType.INCIDENT,
@@ -103,7 +103,7 @@ def test_pvc_alert_matches_filter_rule():
     rules = [
         FilterRule(
             id="r1",
-            tenant="carrefour",
+            tenant="enterprise",
             scope="alertmanager",
             name="Kafka PVC critical",
             enabled=True,

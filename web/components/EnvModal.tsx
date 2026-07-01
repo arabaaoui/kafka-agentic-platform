@@ -230,7 +230,7 @@ export function EnvModal({ isOpen, onClose, onSave, initialData, tenantSlug, env
                     required
                     value={formData.prom_url}
                     onChange={(e) => setFormData({...formData, prom_url: e.target.value})}
-                    placeholder="https://prometheus.internal.carrefour.com"
+                    placeholder="https://prometheus.enterprise.internal"
                     className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-4 py-2 text-sm text-white focus:outline-none focus:border-blue-500/50 transition-colors font-mono"
                   />
                 </div>
@@ -243,7 +243,7 @@ export function EnvModal({ isOpen, onClose, onSave, initialData, tenantSlug, env
                   <input
                     value={formData.proxy_url}
                     onChange={(e) => setFormData({...formData, proxy_url: e.target.value})}
-                    placeholder="http://proxy.carrefour.com:4239"
+                    placeholder="http://proxy.enterprise.internal:8080"
                     className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-4 py-2 text-sm text-white focus:outline-none focus:border-blue-500/50 transition-colors font-mono"
                   />
                 </div>

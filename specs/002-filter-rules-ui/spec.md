@@ -11,7 +11,7 @@
 
 ### User Story 1 — Bootstrap & Personal Filter Active at Install (Priority: P1)
 
-At first install, a bootstrap filter rule is automatically inserted for the current user (assignee=arabaaoui, projects PKH+PHX, issuetype Incident/Bug, status Open). The user immediately sees it in `/settings/filters` without any manual configuration.
+At first install, a bootstrap filter rule is automatically inserted for the current user (assignee=ops-user, projects PKH+PHX, issuetype Incident/Bug, status Open). The user immediately sees it in `/settings/filters` without any manual configuration.
 
 **Why this priority**: Enables dogfooding from minute 0. No config friction.
 
@@ -19,7 +19,7 @@ At first install, a bootstrap filter rule is automatically inserted for the curr
 
 **Acceptance Scenarios**:
 
-1. **Given** a fresh install, **When** the Postgres migration runs, **Then** table `filter_rules` contains exactly 1 row: `{ scope: "jira", name: "Mes incidents Kafka (bootstrap)", enabled: true, criteria: { jql: "project IN (PKH, PHX) AND assignee = arabaaoui AND issuetype IN ('Incident','Bug') AND status NOT IN ('Closed','Resolved') AND created >= -7d" } }`.
+1. **Given** a fresh install, **When** the Postgres migration runs, **Then** table `filter_rules` contains exactly 1 row: `{ scope: "jira", name: "Mes incidents Kafka (bootstrap)", enabled: true, criteria: { jql: "project IN (PKH, PHX) AND assignee = ops-user AND issuetype IN ('Incident','Bug') AND status NOT IN ('Closed','Resolved') AND created >= -7d" } }`.
 2. **Given** the bootstrap rule, **When** the user opens `/settings/filters`, **Then** the rule is visible, enabled, with JQL displayed in read mode.
 
 ---
@@ -121,7 +121,7 @@ The user checks `/triggers/ignored` to see which incoming Jira tickets or alerts
 
 ## Assumptions
 
-- MCP `c4-atlassian` supports JQL search via `jira_search` tool. The Carrefour instance uses standard Jira Cloud JQL syntax.
-- Jira assignee values are email-format usernames (e.g., `arabaaoui`, not full email) — to be confirmed during dogfooding.
+- MCP `c4-atlassian` supports JQL search via `jira_search` tool. The Enterprise instance uses standard Jira Cloud JQL syntax.
+- Jira assignee values are email-format usernames (e.g., `ops-user`, not full email) — to be confirmed during dogfooding.
 - The UI form selects for `project`, `assignee`, `status`, `issuetype`, `priority` use static lists loaded from Jira metadata API at page load (not real-time search). For v0, static values are acceptable.
 - Alertmanager matcher fields (`alertname`, `severity`, `cluster`, `namespace`) are sufficient for v0 alertmanager rules. Label cardinality is manageable.

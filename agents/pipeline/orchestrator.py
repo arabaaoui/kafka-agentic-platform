@@ -58,7 +58,7 @@ class PipelineOrchestrator:
             classification = await intake.classify(
                 source=source,
                 trigger_payload=payload,
-                tenant="carrefour", # Default tenant for lookup
+                tenant="enterprise", # Default tenant for lookup
             )
 
             if not classification:

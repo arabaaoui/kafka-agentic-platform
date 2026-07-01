@@ -129,12 +129,12 @@ def upgrade() -> None:
     op.execute("CREATE INDEX IF NOT EXISTS idx_audits_mission ON audits (mission_id)")
     op.execute("CREATE INDEX IF NOT EXISTS idx_agent_outputs_mission ON agent_outputs (mission_id)")
 
-    # Bootstrap Jira filter rule for tenant carrefour
+    # Bootstrap Jira filter rule for tenant enterprise
     op.execute("""
         INSERT INTO filter_rules (tenant, scope, name, enabled, priority, criteria, created_by)
         VALUES (
-            'carrefour', 'jira', 'Mes incidents Kafka (bootstrap)', TRUE, 100,
-            '{"jql": "project IN (PKH, PHX) AND assignee = arabaaoui AND issuetype IN (''Incident'', ''Bug'') AND status NOT IN (''Closed'', ''Resolved'') AND created >= -7d"}'::jsonb,
+            'enterprise', 'jira', 'Mes incidents Kafka (bootstrap)', TRUE, 100,
+            '{"jql": "project IN (KAP) AND assignee = ops-user AND issuetype IN (''Incident'', ''Bug'') AND status NOT IN (''Closed'', ''Resolved'') AND created >= -7d"}'::jsonb,
             'system'
         )
         ON CONFLICT DO NOTHING

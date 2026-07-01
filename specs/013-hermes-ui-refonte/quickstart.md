@@ -50,15 +50,15 @@ WHERE id = (SELECT id FROM triggers WHERE matched = true LIMIT 1);
 ```sql
 -- Trigger en attente
 INSERT INTO triggers (tenant, source, external_id, payload, matched)
-VALUES ('carrefour', 'alertmanager', 'test-kanban-1', '{}', true);
+VALUES ('enterprise', 'alertmanager', 'test-kanban-1', '{}', true);
 
 -- Trigger réservé (simuler un worker actif)
 INSERT INTO triggers (tenant, source, external_id, payload, matched, claimed_at, claimed_by, attempts)
-VALUES ('carrefour', 'alertmanager', 'test-kanban-2', '{}', true, now(), 'worker-test-0', 1);
+VALUES ('enterprise', 'alertmanager', 'test-kanban-2', '{}', true, now(), 'worker-test-0', 1);
 
 -- Trigger en échec
 INSERT INTO triggers (tenant, source, external_id, payload, matched, last_error, attempts)
-VALUES ('carrefour', 'alertmanager', 'test-kanban-3', '{}', true, 'DEAD: too many failures', 3);
+VALUES ('enterprise', 'alertmanager', 'test-kanban-3', '{}', true, 'DEAD: too many failures', 3);
 ```
 
 ### Tester
@@ -180,7 +180,7 @@ pnpm build        # build production sans erreur
 # Créer rapidement des données de test via l'API
 curl -X POST http://localhost:8000/v1/triggers \
   -H "Content-Type: application/json" \
-  -d '{"tenant": "carrefour", "source": "alertmanager", "external_id": "test-001", "payload": {}}'
+  -d '{"tenant": "enterprise", "source": "alertmanager", "external_id": "test-001", "payload": {}}'
 
 # Simuler un DEAD trigger (pour tester AttentionCard + Kanban En échec)
 psql $DATABASE_URL -c "

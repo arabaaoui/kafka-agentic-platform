@@ -37,7 +37,7 @@ Remplacer les abstractions Python custom de la plateforme (PluginChain, wrapping
 | IV — Eval Suite CI Blocking ≥80% | ⚠️ GATE | Les 3 agents experts sont modifiés (WS-2 plugin chain, WS-3 FunctionTool). **Obligation** : ajouter ≥1 eval case par agent avant merge (`evals/cases/expert_kafka_plugin_chain.yaml`, `expert_k8s_plugin_chain.yaml`, `expert_prom_plugin_chain.yaml`). Voir WS-2 et WS-3 dans le plan d'implémentation. |
 | V — Zero Secret Leakage | ✅ PASS | `AuditPlugin` est migré vers hook natif sans modifier la logique de redaction. Le grep automatique sur `audit.jsonl` reste actif. |
 | VI — Skills = SKILL.md | ✅ PASS | Aucun fichier SKILL.md modifié. |
-| VII — Agnostic by Design | ✅ PASS | Aucune valeur Carrefour-spécifique introduite dans `core/` ou `agents/`. |
+| VII — Agnostic by Design | ✅ PASS | Aucune valeur Enterprise-spécifique introduite dans `core/` ou `agents/`. |
 | VIII — Incident Filters = Postgres | ✅ PASS | Hors périmètre. |
 
 **Constitution Stack Constraints** : La constitution liste explicitement `ParallelAgent`, `SequentialAgent`, `LoopAgent` comme primitives cibles — cette migration est **alignée** avec les contraintes de stack.

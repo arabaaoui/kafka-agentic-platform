@@ -16,7 +16,7 @@ Implement UI-configurable incident routing filters stored in Postgres (`filter_r
 **Target Platform**: Linux server (backend API + poller), browser (Next.js frontend)
 **Project Type**: web-service (FastAPI) + web-application (Next.js)
 **Performance Goals**: rule evaluation <5ms per trigger, rule-test endpoint response <5s (Jira round-trip), `/triggers/ignored` page load <500ms
-**Constraints**: `poll_interval_seconds` minimum 30s enforced server-side; rule toggle reflected in poller within 60s; no Carrefour hardcode in `core/` or `api/` (constitution VII); all filter rules in Postgres, never YAML (constitution VIII)
+**Constraints**: `poll_interval_seconds` minimum 30s enforced server-side; rule toggle reflected in poller within 60s; no Enterprise hardcode in `core/` or `api/` (constitution VII); all filter rules in Postgres, never YAML (constitution VIII)
 **Scale/Scope**: ~10 active rules per tenant, ~1k trigger evaluations/day, single-tenant v0
 
 ## Constitution Check
@@ -31,7 +31,7 @@ Implement UI-configurable incident routing filters stored in Postgres (`filter_r
 | IV. Eval suite CI blocking | PASS | At least 1 new eval case required for FilterEngine (jira scope matching). Tracked in tasks. |
 | V. Zero secret leakage in audit logs | PASS | `filter_match_log` stores only rule_id, trigger_id, matched bool, reason string. No credentials logged. |
 | VI. Skills = SKILL.md filesystem | PASS | Not impacted — no new agent skill file needed for this feature. |
-| VII. No Carrefour hardcode in core | PASS | `filter_engine.py` and `api/routes/filter_rules.py` receive tenant from `TenantConfig`. Bootstrap seed references arabaaoui via a seeded YAML value resolved at install time, not hardcoded in core code. |
+| VII. No Enterprise hardcode in core | PASS | `filter_engine.py` and `api/routes/filter_rules.py` receive tenant from `TenantConfig`. Bootstrap seed references ops-user via a seeded YAML value resolved at install time, not hardcoded in core code. |
 | VIII. Filter rules = Postgres runtime | PASS | This spec IS the implementation of constitution VIII. The bootstrap seed is the defined exception (overridable via UI immediately after install). |
 
 ## Project Structure
@@ -59,7 +59,7 @@ api/
 │   ├── filter_rule.py           # SQLAlchemy ORM: FilterRule, FilterMatchLog
 │   └── schemas/
 │       └── filter_rule.py       # Pydantic v2 request/response schemas
-└── deps.py                      # TenantConfig dependency (existing — no Carrefour hardcode)
+└── deps.py                      # TenantConfig dependency (existing — no Enterprise hardcode)
 
 core/
 └── filter_engine.py             # FilterEngine.evaluate(trigger) → matched FilterRule | None
@@ -70,7 +70,7 @@ migrations/
 ├── versions/
 │   ├── xxxx_create_filter_rules.py       # Alembic: CREATE TABLE filter_rules
 │   ├── xxxx_create_filter_match_log.py   # Alembic: CREATE TABLE filter_match_log
-│   └── xxxx_seed_bootstrap_rule.py       # Alembic: INSERT bootstrap rule (arabaaoui, PKH+PHX)
+│   └── xxxx_seed_bootstrap_rule.py       # Alembic: INSERT bootstrap rule (ops-user, PKH+PHX)
 └── env.py                                # existing
 
 web/
@@ -126,7 +126,7 @@ tests/
 **Bootstrap seed** (Alembic data migration, scope=jira):
 ```json
 {
-  "jql": "project IN (PKH, PHX) AND assignee = arabaaoui AND issuetype IN ('Incident','Bug') AND status NOT IN ('Closed','Resolved') AND created >= -7d"
+  "jql": "project IN (PKH, PHX) AND assignee = ops-user AND issuetype IN ('Incident','Bug') AND status NOT IN ('Closed','Resolved') AND created >= -7d"
 }
 ```
 Tenant value sourced from `TENANT_SLUG` env var at migration time — not hardcoded in the migration file.
@@ -148,7 +148,7 @@ POST   /v1/triggers/{trigger_id}/convert → MissionResponse            (bypass 
 {
   "rule_id": "uuid",
   "matches": [
-    { "key": "PKH-1234", "summary": "Kafka broker OOM", "assignee": "arabaaoui", "status": "Open" }
+    { "key": "PKH-1234", "summary": "Kafka broker OOM", "assignee": "ops-user", "status": "Open" }
   ],
   "total": 1,
   "warning": null

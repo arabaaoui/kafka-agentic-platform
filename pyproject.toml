@@ -55,11 +55,11 @@ dev = [
 ]
 
 [[tool.uv.index]]
-name = "carrefour"
-url = "https://enterpriserepo.fr.carrefour.com/artifactory/api/pypi/phenix-pypi-releases-local/simple"
+name = "enterprise"
+url = "https://enterpriserepo.company.com/artifactory/api/pypi/pypi-local/simple"
 
 [tool.uv.sources]
-kafka-agent-toolkit = { index = "carrefour" }
+kafka-agent-toolkit = { index = "enterprise" }
 
 [tool.ruff]
 line-length = 100

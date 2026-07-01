@@ -8,7 +8,7 @@ vars:
       "title": "[INCIDENT] KafkaHub PROD - Broker kafka-broker-0 OOMKilled, partitions offline",
       "description": "Pod kafka-broker-0 was OOMKilled. 47 partitions are currently offline. ISR shrink detected on topics: phenix.catalog.v2, phenix.prices.v1.",
       "project": "PKH",
-      "assignee": "arabaaoui",
+      "assignee": "ops-user",
       "status": "Open",
       "priority": "Critical",
       "labels": ["kafka", "broker", "oom", "prod"]

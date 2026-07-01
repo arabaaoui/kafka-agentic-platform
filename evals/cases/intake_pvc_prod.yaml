@@ -8,7 +8,7 @@ vars:
       "title": "[INCIDENT] KafkaHub PROD - PVC saturation broker-2 (92%)",
       "description": "Broker kafka-broker-2 PVC /var/lib/kafka/data is at 92% capacity. Risk of OOM and partition leader imbalance.",
       "project": "PKH",
-      "assignee": "arabaaoui",
+      "assignee": "ops-user",
       "status": "In Progress",
       "priority": "High",
       "labels": ["kafka", "storage", "prod"]

@@ -54,7 +54,7 @@ services:
       - "30093:30093"  # Alertmanager NodePort
     volumes:
       - k3s_output:/output
-      - /home/arabaaoui/.gemini/ca-cert.pem:/usr/local/share/ca-certificates/carrefour.crt:ro
+      - ~/.gemini/ca-cert.pem:/usr/local/share/ca-certificates/enterprise-ca.crt:ro
       - ./registries.yaml:/etc/rancher/k3s/registries.yaml:ro
     healthcheck:
       test: ["CMD-SHELL", "[ -f /output/kubeconfig.yaml ]"]
@@ -76,7 +76,7 @@ services:
     volumes:
       - ./lab:/lab
       - k3s_output:/output
-      - /home/arabaaoui/.gemini/ca-cert.pem:/usr/local/share/ca-certificates/carrefour.crt:ro
+      - ~/.gemini/ca-cert.pem:/usr/local/share/ca-certificates/enterprise-ca.crt:ro
     environment:
       - KUBECONFIG=/output/kubeconfig.yaml
     entrypoint: ["/bin/sh", "/lab/provisioner.sh"]
@@ -140,7 +140,7 @@ services:
       - KB_DIR=/app/kb
       - GOOGLE_APPLICATION_CREDENTIALS=/root/.config/gcloud-host/application_default_credentials.json
       - CLOUDSDK_CONFIG=/root/.config/gcloud-host
-      - MCP_C4_ATLASSIAN_URL=https://jira.mcp.carrefour.com/mcp
+      - MCP_C4_ATLASSIAN_URL=https://jira.mcp.enterprise.com/mcp
       - JIRA_MCP_TOKEN=${JIRA_MCP_TOKEN}
       - MCP_USERNAME=${MCP_USERNAME}
       - PYTHONHTTPSVERIFY=0
@@ -160,7 +160,7 @@ services:
       - ../kb:/app/kb
       - k3s_output:/app/kube_conf
       - ~/.config/gcloud:/root/.config/gcloud-host:ro
-      - /home/arabaaoui/.gemini/ca-cert.pem:/usr/local/share/ca-certificates/carrefour.crt:ro
+      - ~/.gemini/ca-cert.pem:/usr/local/share/ca-certificates/enterprise-ca.crt:ro
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/healthz"]
       interval: 30s

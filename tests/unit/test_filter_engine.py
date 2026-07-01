@@ -18,7 +18,7 @@ from core.filter_engine import (
 def _rule(
     *,
     id: str = "rule-1",
-    tenant: str = "carrefour",
+    tenant: str = "enterprise",
     scope: str = "jira",
     name: str = "test rule",
     enabled: bool = True,
@@ -63,7 +63,7 @@ def test_build_jql_empty():
 # ── _jira_matches ─────────────────────────────────────────────────────────────
 
 
-def _jira_issue(project="PHX", assignee="arabaaoui", status="Open", issuetype="Incident"):
+def _jira_issue(project="PHX", assignee="ops-user", status="Open", issuetype="Incident"):
     return {
         "key": f"{project}-123",
         "fields": {
@@ -78,7 +78,7 @@ def _jira_issue(project="PHX", assignee="arabaaoui", status="Open", issuetype="I
 def test_jira_matches_all_fields():
     matched, reason = _jira_matches(
         _jira_issue(),
-        {"project": ["PKH", "PHX"], "assignee": "arabaaoui", "issuetype": "Incident"},
+        {"project": ["PKH", "PHX"], "assignee": "ops-user", "issuetype": "Incident"},
     )
     assert matched
 
@@ -94,7 +94,7 @@ def test_jira_rejects_wrong_project():
 def test_jira_rejects_wrong_assignee():
     matched, reason = _jira_matches(
         _jira_issue(assignee="someone-else"),
-        {"assignee": "arabaaoui"},
+        {"assignee": "ops-user"},
     )
     assert not matched
     assert "assignee" in reason
@@ -109,7 +109,7 @@ def test_jira_jql_key_ignored_in_local_match():
     # The 'jql' key is for the poller, not local matching — should be skipped
     matched, _ = _jira_matches(
         _jira_issue(project="OTHER"),
-        {"jql": "project = PHX", "assignee": "arabaaoui"},
+        {"jql": "project = PHX", "assignee": "ops-user"},
     )
     # Only 'assignee' is locally checked — project not in structured keys → passes
     assert matched

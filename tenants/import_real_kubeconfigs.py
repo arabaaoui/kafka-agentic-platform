@@ -72,7 +72,7 @@ async def import_real_kubeconfigs():
                     kube_context, proxy_url, proxy_user, proxy_pass, created_at, updated_at
                 )
                 VALUES (
-                    :id, 'carrefour', :slug, :dn, :bc, :cl, 
+                    :id, 'enterprise', :slug, :dn, :bc, :cl, 
                     '', :kc, :ns, :pu, '', 
                     :kctx, '', '', '', :now, :now
                 )

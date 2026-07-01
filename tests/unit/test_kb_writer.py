@@ -63,7 +63,7 @@ def test_create_card(writer, kb_dir):
         symptoms=["PVC used > 90%", "Broker log dir full"],
         root_cause="Log retention not configured, disk filled up.",
         body="## Description\nTest body.",
-        mission_id="CARREFOUR-PREPROD-INCIDENT-PVC-SATURATION-20260511-001",
+        mission_id="ENTERPRISE-PREPROD-INCIDENT-PVC-SATURATION-20260511-001",
         env="PREPROD",
     )
     assert path.exists()
@@ -71,7 +71,7 @@ def test_create_card(writer, kb_dir):
     content = path.read_text()
     assert "slug: pvc-saturation" in content
     assert "severity: critical" in content
-    assert "CARREFOUR-PREPROD" in content
+    assert "ENTERPRISE-PREPROD" in content
 
 
 def test_create_card_duplicate_raises(writer):

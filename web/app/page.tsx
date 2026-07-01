@@ -22,7 +22,7 @@ export default function DashboardPage() {
         <div>
           <h1 className="text-white tracking-tight mrcl-title-l">Agentic Lab</h1>
           <p className="text-slate-400 mt-1 max-w-lg mrcl-body-m-regular">
-            Carrefour InfraOps autonomous investigation and diagnostic platform for Kafka ecosystems.
+            Enterprise InfraOps autonomous investigation and diagnostic platform for Kafka ecosystems.
           </p>
         </div>
         <div className="flex gap-2">

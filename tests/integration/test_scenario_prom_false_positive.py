@@ -35,7 +35,7 @@ PREPROD_PROM = "https://prom.preprod.example.com"
 @pytest.fixture()
 def tenant_cfg() -> TenantConfig:
     return TenantConfig(
-        tenant="carrefour",
+        tenant="enterprise",
         envs={
             "preprod": EnvConfig(
                 clusters=["kafka-preprod"],
@@ -49,8 +49,8 @@ def tenant_cfg() -> TenantConfig:
 @pytest.fixture()
 def mission() -> MissionContext:
     return MissionContext(
-        mission_id="CARREFOUR-PREPROD-INCIDENT-PROM-FALSE-POSITIVE-20260510-001",
-        tenant="carrefour",
+        mission_id="ENTERPRISE-PREPROD-INCIDENT-PROM-FALSE-POSITIVE-20260510-001",
+        tenant="enterprise",
         env="preprod",
         cluster="kafka-preprod",
         type=MissionType.INCIDENT,
@@ -66,7 +66,7 @@ def test_jira_bug_ticket_matches_filter():
         "key": "PHX-9876",
         "fields": {
             "project": {"key": "PHX"},
-            "assignee": {"name": "arabaaoui"},
+            "assignee": {"name": "ops-user"},
             "status": {"name": "Open"},
             "issuetype": {"name": "Bug"},
         },
@@ -74,7 +74,7 @@ def test_jira_bug_ticket_matches_filter():
     rules = [
         FilterRule(
             id="bootstrap",
-            tenant="carrefour",
+            tenant="enterprise",
             scope="jira",
             name="Mes incidents Kafka (bootstrap)",
             enabled=True,
@@ -82,7 +82,7 @@ def test_jira_bug_ticket_matches_filter():
             poll_interval_seconds=60,
             criteria={
                 "project": ["PKH", "PHX"],
-                "assignee": "arabaaoui",
+                "assignee": "ops-user",
                 "issuetype": ["Incident", "Bug"],
             },
         )

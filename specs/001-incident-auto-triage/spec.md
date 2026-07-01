@@ -15,11 +15,11 @@ A Kafka incident occurs in the preprod environment (PVC saturation on broker-2).
 
 **Why this priority**: This is the single killer feature of v0. Every other user story depends on this flow working correctly.
 
-**Independent Test**: Can be fully tested using a mocked Jira webhook payload (PHX-99999 incident PVC saturation, assignee=arabaaoui, env=preprod) against the lab Docker stack (Strimzi 0.45.1 KRaft). Delivers value as a standalone feature: the user sees the full ranked audit without manual investigation.
+**Independent Test**: Can be fully tested using a mocked Jira webhook payload (PHX-99999 incident PVC saturation, assignee=ops-user, env=preprod) against the lab Docker stack (Strimzi 0.45.1 KRaft). Delivers value as a standalone feature: the user sees the full ranked audit without manual investigation.
 
 **Acceptance Scenarios**:
 
-1. **Given** a Jira ticket PHX-99999 (issuetype=Incident, assignee=arabaaoui, project=PHX, status=Open), **When** the Jira poller runs against the active filter rule, **Then** a mission `CARREFOUR-PREPROD-INCIDENT-PVC-SATURATION-20260510-001` is created within 60 seconds.
+1. **Given** a Jira ticket PHX-99999 (issuetype=Incident, assignee=ops-user, project=PHX, status=Open), **When** the Jira poller runs against the active filter rule, **Then** a mission `ENTERPRISE-PREPROD-INCIDENT-PVC-SATURATION-20260510-001` is created within 60 seconds.
 2. **Given** a created mission, **When** `intake_agent` parses the ticket, **Then** it correctly identifies env=preprod, cluster=kafka-preprod, pattern=PVC_SATURATION and locks the mission to preprod endpoints only.
 3. **Given** a locked mission, **When** `ParallelAgent` runs the 3 experts, **Then** all 3 complete within 4 minutes and their outputs appear in `agent-outputs/`.
 4. **Given** 3 expert outputs, **When** `evidence_consolidator` runs in thinking mode, **Then** it produces `audit.md` with at least 2 ranked hypotheses, evidence sections, and recommended actions.
@@ -117,7 +117,7 @@ After reviewing the audit in the UI, the team member explicitly clicks "Post to 
 
 - MCP `c4-atlassian` is available and configured with the same credentials as `gemini-kafka-ops-extension`. No new Jira auth setup required.
 - The lab Docker stack (Strimzi 0.45.1 KRaft + Prometheus) is sufficient to validate 80% of tools. The remaining 20% (MM2, Connect, SCRAM, ACL) require preprod access.
-- `intake_agent` can determine `env` from Jira ticket metadata (custom fields, labels, or ticket summary) for Carrefour tickets. A fallback regex on summary text is acceptable for v0.
+- `intake_agent` can determine `env` from Jira ticket metadata (custom fields, labels, or ticket summary) for Enterprise tickets. A fallback regex on summary text is acceptable for v0.
 - `kafka-agent-toolkit` is published to the internal GitLab pip registry before this spec's tools are used in platform agents.
 - Langfuse self-hosted is accessible at `localhost:3001` in local dev and at a stable internal URL in preprod/prod.
-- User (arabaaoui) has read-only kubeconfig for preprod clusters during dogfooding phase.
+- User (ops-user) has read-only kubeconfig for preprod clusters during dogfooding phase.

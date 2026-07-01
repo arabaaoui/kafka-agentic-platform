@@ -1,12 +1,12 @@
 description: "KafkaStrimziExpert — consumer lag investigation identifies root cause with correct tool usage (WS-2/WS-3 plugin chain migration)"
 prompt: expert_kafka_investigate
 vars:
-  mission_id: "CARREFOUR-PREPROD-TEST-CONSUMER-LAG-20260601-001"
+  mission_id: "ENTERPRISE-PREPROD-TEST-CONSUMER-LAG-20260601-001"
   env: "PREPROD"
   cluster: "kafka-preprod"
   subject: "consumer-lag"
   task: |
-    Mission CARREFOUR-PREPROD-TEST-CONSUMER-LAG-20260601-001 (env=PREPROD, cluster=kafka-preprod)
+    Mission ENTERPRISE-PREPROD-TEST-CONSUMER-LAG-20260601-001 (env=PREPROD, cluster=kafka-preprod)
 
     Alert: KafkaConsumerGroupLag — consumer group phenix-etl shows 2.5M message lag
     on topic phenix.orders.v3 (partition 0) for the past 15 minutes.

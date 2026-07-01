@@ -214,7 +214,7 @@ RETURNING id, tenant, source, external_id
 | `--mrcl-persistent-border-default` | Bordure |
 | `--mrcl-persistent-content-default` | Texte principal |
 | `--mrcl-persistent-content-subtle` | Texte secondaire |
-| `--crf-blue` | Couleur accent Carrefour (#003087) |
+| `--crf-blue` | Couleur accent Enterprise (#003087) |
 
 **Palette Kanban (via mrcl-tag)** :
 - En attente : `mrcl-tag variant="info"`
