@@ -107,6 +107,21 @@ flowchart TD
     PM --> PGV
     PIPE --> LF
     PIPE --> PGV
+
+    %% Style Definitions
+    classDef blueNode fill:#0d1117,stroke:#58a6ff,stroke-width:1px,color:#fff;
+    classDef yellowNode fill:#0d1117,stroke:#d29922,stroke-width:1px,color:#fff;
+    classDef greenNode fill:#0d1117,stroke:#3fb950,stroke-width:1px,color:#fff;
+    classDef purpleNode fill:#0d1117,stroke:#d2a8ff,stroke-width:1px,color:#fff;
+    classDef orangeNode fill:#0d1117,stroke:#f0883e,stroke-width:1px,color:#fff;
+    classDef tealNode fill:#0d1117,stroke:#2dd4bf,stroke-width:1px,color:#fff;
+
+    class JM,AM,UI,JIRA,TRIG blueNode;
+    class FR,JQL,LOG,FE,PM,LF yellowNode;
+    class DB,WORK,W,PGV greenNode;
+    class PT,PAR purpleNode;
+    class KE orangeNode;
+    class IA,EC,PIPE,OUT,SRE tealNode;
 ```
 
 ---
@@ -206,28 +221,39 @@ flowchart TD
 
 Pour pallier le manque de contexte interne des LLMs de commodité et éviter qu'ils n'hallucinent des résolutions, la plateforme embarque une mémoire vectorielle persistante (RAG) alimentée en continu.
 
-```
-                  ┌───────────────────────────────┐
-                  │      incident_trigger         │
-                  └───────────────┬───────────────┘
-                                  │ (Recherche sémantique)
-                                  ▼
-                     Embedding query: (E5-small)
-                                  │
-         ┌────────────────────────┴────────────────────────┐
-         ▼ (pgvector Cosine Distance UNION ALL)            ▼
-┌─────────────────────────┐               ┌─────────────────────────┐
-│     kb/incidents/       │               │    audits/{id}/audit.md │
-│ (Base de connaissances)  │               │   (Historique d'audits) │
-└────────┬────────────────┘               └────────┬────────────────┘
-         │                                         │
-         └────────────────────────┬────────────────┘
-                                  ▼
-                  Top-3 passages les plus proches
-                                  │
-                                  ▼
-                  Pré-injectés dans le prompt de:
-               (Experts Agents + Consolidator Agent)
+```mermaid
+flowchart TD
+    %% Node definitions
+    TR["🎯 incident_trigger<br><i>(Payload d'alerte ou ticket Jira)</i>"]
+    EMB["🔤 Embedding Query<br><i>(E5-small vector space)</i>"]
+    
+    subgraph DB["PostgreSQL + pgvector (UNION ALL)"]
+        direction LR
+        KB["📚 kb/incidents/<br><i>(Base de Connaissances)</i>"]
+        AUD["📄 audits/{id}/audit.md<br><i>(Historique d'Audits)</i>"]
+    end
+    
+    TOP["🔝 Top-3 Chunks<br><i>(Passages les plus similaires - Cosine Distance)</i>"]
+    PROMPT["⚡ Prompt Augmenté<br><i>(Pré-injecté avant l'investigation)</i>"]
+    AGENTS["🤖 Agents IA Experts<br><i>(KafkaStrimziExpert, EvidenceConsolidator...)</i>"]
+
+    %% Connections
+    TR -->|Recherche Sémantique| EMB
+    EMB --> KB & AUD
+    KB & AUD -->|Top similarité| TOP
+    TOP -->|Injection de contexte| PROMPT
+    PROMPT -->|Ancrage des réponses| AGENTS
+
+    %% Styling
+    classDef main fill:#1f6feb,stroke:#58a6ff,stroke-width:1px,color:#fff;
+    classDef sub fill:#161b22,stroke:#30363d,stroke-width:2px,color:#fff;
+    classDef db fill:#238636,stroke:#3fb950,stroke-width:1px,color:#fff;
+    classDef out fill:#8957e5,stroke:#d2a8ff,stroke-width:1px,color:#fff;
+    
+    class TR,EMB main;
+    class DB sub;
+    class KB,AUD db;
+    class TOP,PROMPT,AGENTS out;
 ```
 
 ### 1. Dual Vector Sources
@@ -245,6 +271,35 @@ La plateforme utilise le modèle `intfloat/multilingual-e5-small` pour des raiso
 Les environnements de production d'entreprise sont isolés d'Internet. La plateforme fonctionne de manière 100% autonome et hermétique :
 * Au build-time (avec accès internet), le modèle d'embedding est téléchargé et sauvegardé dans l'image Docker à l'emplacement `/models/multilingual-e5-small`.
 * Au runtime, la variable d'environnement `EMBEDDING_MODEL_PATH=/models/multilingual-e5-small` force le chargement du modèle depuis le disque local, bloquant tout appel réseau externe vers HuggingFace Hub.
+
+---
+
+## 🆔 Anatomie du Mission ID
+
+Chaque investigation reçoit un identifiant de mission immuable, hautement structuré et lisible pour l'humain. Il est utilisé dans toutes les traces de diagnostic, les répertoires de fichiers et les commentaires de tickets de tracking :
+
+```mermaid
+flowchart TD
+    subgraph MID["Anatomie du Mission ID"]
+        direction LR
+        A["CARREFOUR"] --- B["PREPROD"] --- C["INCIDENT"] --- D["PVC-SATURATION"] --- E["20260520"] --- F["001"]
+    end
+
+    A1["<b>TENANT</b><br><i>Identifiant de configuration (ex: CARREFOUR)</i>"] --> A
+    B1["<b>ENV</b><br><i>Environnement cible (ex: PREPROD)</i>"] --> B
+    C1["<b>TYPE</b><br><i>Type de déclencheur (ex: INCIDENT, ALERTE)</i>"] --> C
+    D1["<b>SUBJECT</b><br><i>Sujet de la panne (ex: kebab-case, max 30 char)</i>"] --> D
+    E1["<b>DATE</b><br><i>Date de création (ex: YYYYMMDD)</i>"] --> E
+    F1["<b>SEQ</b><br><i>Numéro séquentiel quotidien (ex: 001)</i>"] --> F
+
+    style MID fill:#0d1117,stroke:#30363d,stroke-width:2px,color:#fff
+    style A fill:#1f6feb,stroke:#58a6ff,stroke-width:1px,color:#fff
+    style B fill:#238636,stroke:#3fb950,stroke-width:1px,color:#fff
+    style C fill:#d29922,stroke:#f0883e,stroke-width:1px,color:#fff
+    style D fill:#8957e5,stroke:#d2a8ff,stroke-width:1px,color:#fff
+    style E fill:#f85149,stroke:#f85149,stroke-width:1px,color:#fff
+    style F fill:#21262d,stroke:#30363d,stroke-width:1px,color:#fff
+```
 
 ---
 
