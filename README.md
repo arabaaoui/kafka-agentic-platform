@@ -23,22 +23,26 @@ De la même manière qu'un OS traditionnel fournit des appels système (syscalls
 * **RAG & Mémoire Sémantique** : Injection automatique de l'historique des incidents similaires avant le début de l'investigation.
 * **Orchestration Multi-Agent** : Concurrence managée pour éviter la latence.
 
-```
-┌────────────────────────────────────────────────────────┐
-│               Agents IA Spécialisés                     │
-│  (KafkaStrimziExpert, K8sGcpSreAgent, PostMortem...)   │
-├────────────────────────────────────────────────────────┤
-│                 OS Agentique Services                  │
-│  (RAG Vectoriel, Audit JSONL, Isolation, Autonomie)   │
-├────────────────────────────────────────────────────────┤
-│             Infrastructure Réelle (KKap)               │
-│     (Kubectl, Prometheus, API Jira, Postgres DB)       │
-└────────────────────────────────────────────────────────┘
+```mermaid
+graph TD
+    subgraph Layers["Couches d'Abstraction de la Plateforme"]
+        direction TB
+        A["🤖 Agents IA Spécialisés<br><i>(KafkaStrimziExpert, K8sGcpSreAgent, PostMortem...)</i>"]
+        B["🧠 Services de l'OS Agentique<br><i>(RAG Vectoriel, Audit JSONL, Isolation, Autonomie)</i>"]
+        C["⚙️ Infrastructure Réelle (KKap)<br><i>(Kubectl, Prometheus, API Jira, Postgres DB)</i>"]
+        
+        A === B === C
+    end
+    
+    style Layers fill:#0d1117,stroke:#30363d,stroke-width:2px,color:#fff
+    style A fill:#1f6feb,stroke:#58a6ff,stroke-width:1px,color:#fff
+    style B fill:#238636,stroke:#3fb950,stroke-width:1px,color:#fff
+    style C fill:#8957e5,stroke:#d2a8ff,stroke-width:1px,color:#fff
 ```
 
 ---
 
-## 🧩 Les 3 Couches du Système
+## 🧩 Les 2 Couches du Système
 
 Le projet est conçu de manière modulaire selon une séparation stricte des responsabilités :
 
@@ -46,8 +50,6 @@ Le projet est conçu de manière modulaire selon une séparation stricte des res
    Une bibliothèque Python pure et sans état (DB, HTTP). Elle regroupe les primitives de diagnostic métier (`lag_correlation`, `pvc_forecast`, `cluster_health`, `prom_query`), les schémas Pydantic de validation et le chargeur de system prompts (`SKILL.md`). Elle est hautement testable unitairement.
 2. **`kafka-agentic-platform` (Stateful OS - Ce Dépôt)** :
    Le coeur opérationnel de l'application. Il contient l'API FastAPI, le worker asynchrone, le moteur de filtres, la file d'attente robuste, l'orchestrateur de pipeline Google ADK 2.x, la base de données PostgreSQL + pgvector pour le RAG, et l'interface utilisateur Next.js.
-3. **`gemini-kafka-ops-extension` (Optionnelle & Expérimentale)** :
-   Extension personnelle permettant de surcharger à la volée le comportement des agents ou d'ajouter des capacités de diagnostic avancées. Non requise pour le fonctionnement nominal de la plateforme.
 
 ---
 
