@@ -309,6 +309,65 @@ flowchart TD
 
 ---
 
+## 🛠️ Méthodologie de Développement (Spec-Driven)
+
+La **Kafka Agentic Platform** est développée selon une méthodologie rigoureuse appelée **Spec-Driven Development** (Développement piloté par les spécifications). Cette approche garantit qu'aucune ligne de code n'est écrite sans une conception fonctionnelle et technique préalable, validée par des tests automatiques d'intégration continue.
+
+### 1. Rôle des répertoires de conception
+* **`docs/`** : Regroupe la documentation utilisateur, les manuels opératoires d'exploitation, ainsi que les guides d'authentification GKE et d'infrastructure de référence.
+* **`docs/adr/`** : Contient les **Architectural Decision Records** (ADR). Ce sont des documents de choix technologiques immuables (ex: politique bilingue ADR-005, choix du moteur de recherche vectoriel ADR-009).
+* **`specs/`** : Contient toutes les fonctionnalités développées découpées en sous-dossiers numérotés (`specs/001-.../`, `specs/002-.../`).
+
+### 2. Cycle de vie d'un développement (PRD ➔ Specs ➔ Tasks ➔ Implementation)
+
+Le développement d'une nouvelle fonctionnalité traverse obligatoirement les phases ordonnées suivantes :
+
+```mermaid
+flowchart TD
+    %% Workflow steps
+    PRD["📋 1. Émission du PRD<br><i>(Product Requirement Document)</i>"]
+    ADR["🏛️ 2. Rédaction de l'ADR<br><i>(Choix d'Architecture)</i>"]
+    SPEC["📄 3. Fichier de Spécification<br><i>(specs/xxx/spec.md)</i>"]
+    TASK["✅ 4. Liste de Tâches<br><i>(specs/xxx/tasks.md avec Speckits)</i>"]
+    IMPL["💻 5. Implémentation Logicielle<br><i>(Core code & UI)</i>"]
+    EVAL["🧪 6. Évaluations Promptfoo<br><i>(evals/cases/ avec Gate >= 80%)</i>"]
+    VAL["🚀 7. Validation finale<br><i>(Tests unitaires & d'intégration)</i>"]
+
+    %% Connections
+    PRD --> ADR
+    ADR --> SPEC
+    SPEC --> TASK
+    TASK --> IMPL
+    IMPL --> EVAL
+    EVAL --> VAL
+
+    %% Styling
+    classDef step fill:#0d1117,stroke:#58a6ff,stroke-width:1px,color:#fff;
+    classDef act fill:#0d1117,stroke:#238636,stroke-width:1px,color:#fff;
+    classDef doc fill:#0d1117,stroke:#d29922,stroke-width:1px,color:#fff;
+    
+    class PRD,ADR,SPEC doc;
+    class TASK step;
+    class IMPL,EVAL,VAL act;
+```
+
+#### Étape A : Du PRD à la Spécification Technique
+Chaque fonctionnalité commence par un besoin fonctionnel (PRD). Ce besoin est traduit techniquement par une spécification complète dans `specs/xxx/spec.md` décrivant les critères d'acceptation, les schémas de base de données modifiés et les contrats d'API.
+
+#### Étape B : Découpage en Tâches avec *Speckits*
+Avant de coder, la spécification est découpée en tâches unitaires atomiques dans un document `specs/xxx/tasks.md`. Chaque tâche se voit attribuer un identifiant unique (ex : `T001`, `T002`) et des critères de validation stricts. Ce "Speckit" sert de checklist d'avancement pour l'ingénieur ou l'agent d'implémentation.
+
+#### Étape C : Implémentation
+Le code source est écrit de manière chirurgicale, en respectant scrupuleusement les contraintes posées par l'ADR et la Spec.
+
+#### Étape D : Évaluation des Prompts (Promptfoo)
+Pour les fonctionnalités impliquant des comportements d'agents IA, des tests de régression non-déterministes (sécurité, conformité des prompts, absence de secrets dans les traces) sont écrits sous forme de cas d'évaluation Promptfoo (`evals/cases/`). La validation exige un taux de succès (gate) supérieur ou égal à 80 %.
+
+#### Étape E : Validation Finale
+Les tests unitaires (`pytest tests/unit`) et d'intégration (`pytest tests/integration`) sont exécutés localement puis dans la CI avant d'autoriser la fusion sur `main`.
+
+---
+
 ## 🔒 Niveaux d'Autonomie (Guardrails Opérationnels)
 
 Pour protéger l'intégrité de la plateforme de production, l'accès en écriture est rigoureusement encadré par le composant `AutonomyPlugin` :
